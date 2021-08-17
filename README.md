@@ -8,13 +8,13 @@ This repository contains the code used in the publication "Temporary Title" that
 
    a. Provide the correct values to the ```DATA_DIR``` and ```SCRIPTS_DIR``` variables in ```utils/variables.py```.
    
-   ```DATA_DIR```: folder where you want to download the HCP dataset and perform all necessary analyses
-   ```SCRIPTS_DIR```: folder where you downloaded this repository
+   * ```DATA_DIR```: folder where you want to download the HCP dataset and perform all necessary analyses
+   * ```SCRIPTS_DIR```: folder where you downloaded this repository
    
    b. provide your XNAT central user and password in ```utils/variables.py```.
    
-   ```XNAT_USER```: provide your username
-   ```XANT_PASSWORD```: provide your password
+   * ```XNAT_USER```: provide your username
+   * ```XANT_PASSWORD```: provide your password
    
 **2. Create the necessary conda environments**
 
@@ -26,4 +26,14 @@ To run this code you will need two separate conda environments:
 
 **2. Download data from XNAT**
 
-Notebook ```N00_DownloadDataFromHCPXNAT``` contains the necessary code to downlaod all necessary data files from XNAT Central. To do so, we rely on the pyxnat library. Becuase this library is not compati 
+Notebook ```N00_DownloadDataFromHCPXNAT``` contains the necessary code to downlaod all necessary data files from XNAT Central.
+
+This notebook used the ```pyxant_env``` environment.
+
+Many cells on this notebook will take a long time (over one hour). Be ready for that with a nice cup of coffee.
+
+**3. Basic QA**
+
+Notebook ```N01_QA``` will help us identify resting-state runs with issues such as missing ET data, ET files that do not load correctly, or have an incorrect number of volumes. Those will not be used in further analyses. This notebook will write a dataframe with this information that it is used in subsequent notebooks to load only valid data.
+
+
