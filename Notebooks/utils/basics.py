@@ -11,6 +11,21 @@ def get_7t_subjects():
   sbj_list = list(df['Sbj'].unique())
   return sbj_list
 
+def get_available_runs(when='post_download'):
+    out_list = []
+    # List of runs for which fMRI data was acquired
+    if when == 'post_download':
+        data = pd.read_pickle(ProjectFiles_DF_Path)
+    # List of runs for which ET exists
+    if when == 'post_qa1':
+        data = pd.read_pickle(QA1_Results_DF_Path)
+        data = data[(data['ET_OK']==True) & (data['ET Avail']==True) & (data['Spatial Resolution OK']==True) & (data['TR OK']==True) & (data['Nacq OK']==True)]
+        for index,row in data.iterrows():
+            sbj = str(row['Sbj'])
+            run = str(row['Run'])
+            out_list.append('_'.join([sbj,run]))
+    return out_list
+
 def load_motion_info(sbjs, verbose=False, fillnan=True, write_FD=False):
   """
   Load motion information for all subjects in provided list into a dataframe. In addition,

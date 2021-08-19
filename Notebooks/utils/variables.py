@@ -39,5 +39,5 @@ ET_Blink_Dur_Thr         = 1000  # Blinks longer than this duration [ms] are con
 ET_Blink_Buffer_NSamples = 50    # Buffer around onset and offset of blinks that gets removed and interpolated
                                  # (this takes care of spikes that happen in ET traces at the begining and end of blinks)
 ET_MinNum_Fixations      = 20    # Minimum Number of Fixations per run to consider the fixation information viable
-
+Ndiscard                 = 10    # Number of volumes discarded in pre-processing (to reach steady-state). In units of seconds.
 
