@@ -179,7 +179,7 @@ FIGURE1 = pn.Column(pn.Row(FIG1_PANELA,FIG1_PANELB),FIG1_PANELSCD)
 
 FIGURE1.save('./figures/Figure01_ScanGroups.png')
 
-# <img src="./figures/Figure01_ScanGroups.png" width="1200" />
+# <img src="figures/Figure01_ScanGroups.png" width="1200" />
 
 # ***
 # # 4. Create Figure 4
