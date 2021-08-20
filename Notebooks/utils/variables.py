@@ -41,3 +41,7 @@ ET_Blink_Buffer_NSamples = 50    # Buffer around onset and offset of blinks that
 ET_MinNum_Fixations      = 20    # Minimum Number of Fixations per run to consider the fixation information viable
 Ndiscard                 = 10    # Number of volumes discarded in pre-processing (to reach steady-state). In units of seconds.
 
+# Thresholds for defining the awake and drowsy subjects (based on percentage of time they had their eyes closed)
+# --------------------------------------------------------------------------------------------------------------
+PercentWins_EC_Awake     = 0.05         # Subjects who kept their eyes closed less than 5% of the time --> awake subjects
+PercentWins_EC_Sleep     = [0.20, 0.90] # Subjects who kept their eyes closed between 10 and 90% of the time --> drowsy subjects
