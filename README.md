@@ -2,7 +2,19 @@
 
 This repository contains the code used in the publication "Temporary Title" that investigates the potential value of ultra-slow fluctuations around 0.05Hz in inferior ventricular regions as a marker of light sleep when fMRI-data is available. This work relies on the publicly available 7T resting-state sample from the human connectome project.
 
-# How to run the analyses
+# Pre-requisites
+
+In addition to several python libraries, this project also relies on a set of additional software that will need to install first. Those are:
+
+* AFNI (https://afni.nimh.nih.gov/): for pre-processing and transformation of structural and functional data.
+* RapidTide (https://rapidtide.readthedocs.io/en/latest/): for estimation of lag profiles of signals across the brain.
+
+Additionally, we also make use of the 200 ROI version of the Scheffer Atlas (https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal). This atlas is available here: https://github.com/ThomasYeoLab/CBIG/blob/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/MNI/Schaefer2018_200Parcels_7Networks_order_FSLMNI152_2mm.nii.gz
+
+Please, make sure to download the ```Schaefer2018_200Parcels_7Networks_order_FSLMNI152_2mm.nii.gz``` file and place it in an accesible location. You will configure what that folder is in step 1 of "hoe to run this code" below.
+
+
+# How to run this code
 
 **1. Configure your local version of the Repository**
 
@@ -51,3 +63,5 @@ Notebook ```N03_LabelRestRuns``` will label runs with eyes closed less than 95% 
 **6. Identify Long Segments of Eye Closure and Eye Opening**
 
 This operation is also conducted by notebook ```N03_LabelRestRuns```. This notebook generates two pickle files ```Resources/EC_Segments_Info.pkl``` and ```Resources/EO_Segments_Info.pkl``` that contain information about every single EC and EO segment. Such information includes, among others, a unique identifier per segment (used to name files), segment onset, segment offset and segment duration.
+
+** 7. **
