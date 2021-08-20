@@ -177,9 +177,7 @@ FIG1_PANELSCD = (ET_PupilSize_Proc_1Hz_COPY[sample_awake].hvplot(width=1400, hei
 
 FIGURE1 = pn.Column(pn.Row(FIG1_PANELA,FIG1_PANELB),FIG1_PANELSCD)
 
-FIGURE1.save('./figures/Figure01_ScanGroups.png')
-
-# <img src='./figures/Figure01_ScanGroups.png' />
+FIGURE1
 
 # ***
 # # 4. Create Figure 4
