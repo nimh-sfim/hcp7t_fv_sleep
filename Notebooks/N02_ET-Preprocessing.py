@@ -42,7 +42,7 @@
 # * ```./Resources/ET_PupilSize_Proc.pkl)```: contains one column per resting-state run (561 of them) with partially processed ET traces (step 1 - 5) 
 # * ```./Resources/ET_PupilSize_Proc_1Hz.pkl)```: contains one column per resting-state run (561 of them) with partially processed ET traces (step 1 - 6)
 # * ```./Resources/ET_PupilSize_Proc_1Hz_corrected.pkl)```: contains one column per resting-state run (561 of them) with fully preprocessed ET data (steps 1 - 8)
-#
+# * ```<DATA_DIR>/<SBJ_DIR>/<RUN_DIR>/<RUN>.ET_PupilSize_Preproc_1Hz_corrected.pkl```: fully pre-processed ET data for each individual run will be also saved in each run folder.
 # ***
 
 import numpy  as np
@@ -410,8 +410,18 @@ axs.set_xlim(0,300)
 
 del postcorrection, precorrection
 
-# ### Save fully pre-processed ET data to disk
+# # 4. Save fully pre-processed ET data to disk
+#
+# First, we will save the timeseries for all the good runs into a single pickle file in the Resources directory
 
 ET_PupilSize_Proc_1Hz_B.to_pickle(osp.join(Resources_Dir,'ET_PupilSize_Proc_1Hz_corrected.pkl'))
 
+# Additionaly, we will also save a copy of the fully pre-processed ET data on each run directory. This time the pickle file will only contain the traces for each particular run separately
 
+# %%time
+for item in ET_PupilSize_Proc_1Hz_B.columns:
+    sbj,run  = item.split('_',1)
+    run_dir  = osp.join(DATA_DIR,sbj,run)
+    out_path = osp.join(run_dir,'.'.join([run,'ET_PupilSize_Preproc_1Hz_corrected','pkl']))
+    ET_PupilSize_Proc_1Hz_B.to_pickle(out_path)
+    print('++ ET File saved [%s]:' % out_path)
