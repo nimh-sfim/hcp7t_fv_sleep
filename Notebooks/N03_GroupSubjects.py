@@ -179,7 +179,9 @@ FIGURE1 = pn.Column(pn.Row(FIG1_PANELA,FIG1_PANELB),FIG1_PANELSCD)
 
 FIGURE1.save('./figures/Figure01_ScanGroups.png')
 
-FIGURE1.save('./dyn_figures/Figure01_ScanGroups.html')
+# ![](./figures/Figure01_ScanGroups.png)
+#
+# <img scr='./figures/Figure01_ScanGroups.png' />
 
 # ***
 # # 4. Create Figure 4
