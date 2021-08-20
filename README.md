@@ -40,3 +40,14 @@ Notebook ```N01_QA``` will help us identify resting-state runs with issues such 
 
 Notebook ```N02_ET-Preprocessing``` does all the pre-processing of the ET data as described in the manuscript. During the pre-processing, we detected a couple extra issues with a few runs. Namely, three runs did not have complete ET timeseries and 4 runs did not have information to permit synchronization of ET and fMRI data. At the completion of this notebook, you should have fully pre-processed ET traces stored in ```Resources/ET_PupilSize_Proc_1Hz_corrected.pkl``` for the 561 runs that passed all QA controls.
 
+**5. Label Runs (Drowsy / Awake)**
+
+Notebook ```N03_LabelRestRuns``` will label runs with eyes closed less than 95% of the time as "awake" and runs with eyes closed between 20% and 90% as "drwosy". The rest of the runs will be discarded. Those labels will be used in many subsequent analyses. This notebook also generates main figures 1 and 4.
+
+| Figure 1                                                              | Figure 4                                                               |
+|-----------------------------------------------------------------------|------------------------------------------------------------------------|
+| <img src='./Notebooks/figures/Figure01_ScanGroups.png' width="500" /> | <img src='./Notebooks/figures/Figure04_runsECperTR.png' width="500" /> |
+
+**6. Identify Long Segments of Eye Closure and Eye Opening**
+
+This operation is also conducted by notebook ```N03_LabelRestRuns```. This notebook generates two pickle files ```Resources/EC_Segments_Info.pkl``` and ```Resources/EO_Segments_Info.pkl``` that contain information about every single EC and EO segment. Such information includes, among others, a unique identifier per segment (used to name files), segment onset, segment offset and segment duration.
