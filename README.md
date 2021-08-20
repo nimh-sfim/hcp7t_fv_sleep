@@ -36,4 +36,7 @@ Many cells on this notebook will take a long time (over one hour). Be ready for 
 
 Notebook ```N01_QA``` will help us identify resting-state runs with issues such as missing ET data, ET files that do not load correctly, or have an incorrect number of volumes. Those will not be used in further analyses. This notebook will write a dataframe with this information that it is used in subsequent notebooks to load only valid data.
 
+**4. ET-Preprocessing (& additional QA)**
+
+Notebook ```N02_ET-Preprocessing``` does all the pre-processing of the ET data as described in the manuscript. During the pre-processing, we detected a couple extra issues with a few runs. Namely, three runs did not have complete ET timeseries and 4 runs did not have information to permit synchronization of ET and fMRI data. At the completion of this notebook, you should have fully pre-processed ET traces stored in ```Resources/ET_PupilSize_Proc_1Hz_corrected.pkl``` for the 561 runs that passed all QA controls.
 
