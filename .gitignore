@@ -1,1 +1,3 @@
-Resources/7T_SubjectList.csv
+Resources/
+Notebooks/N04_Preprocess_masks_and_ROIs.SWARM.sh
+Notebooks/N04_Preprocess_masks_and_ROIs.logs/
