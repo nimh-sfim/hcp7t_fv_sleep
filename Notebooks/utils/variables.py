@@ -1,12 +1,18 @@
 import os.path as osp
 
 # List of Possible Runs (not all runs may be available for all subjects)
+# ----------------------------------------------------------------------
 RUNS        = ['rfMRI_REST1_PA','rfMRI_REST2_AP','rfMRI_REST3_PA','rfMRI_REST4_AP']
+
+# Name of Atlas used for Network Analyses
+# ---------------------------------------
+ATLAS_NAME  = 'Schaefer2018_200Parcels_7Networks'
 
 # Primary Folders for this project
 # ================================
 DATA_DIR    = '/data/SFIMJGC_HCP7T/HCP7T'
 SCRIPTS_DIR = '/data/SFIMJGC_HCP7T/hcp7t_fv_sleep'
+ATLAS_DIR   = ops.join(DATA_DIR,'Atlases',ATLAS_NAME)
 
 # XNAT Credentials
 # ================
