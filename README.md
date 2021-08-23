@@ -85,7 +85,7 @@ Notebook ```N03_LabelRestRuns``` will label runs with eyes closed less than 95% 
 
 This operation is also conducted by notebook ```N03_LabelRestRuns```. This notebook generates two pickle files ```Resources/EC_Segments_Info.pkl``` and ```Resources/EO_Segments_Info.pkl``` that contain information about every single EC and EO segment. Such information includes, among others, a unique identifier per segment (used to name files), segment onset, segment offset and segment duration.
 
-** 7. Pre-process ROIs and Mask **
+**7. Pre-process ROIs and Mask**
 
 Next, notebook ```N04_Preprocess_mask_and_ROIs``` will create a series of subject specific masks used in subsequent analyses. Those include subject specific GM ribbon, WM, V4, lateral ventricles (Vl) and the Schaefer Atlas (200 ROIs) constrained to the subject's GM ribbon.
 
