@@ -180,8 +180,6 @@ FIGURE1 = pn.Column(pn.Row(FIG1_PANELA,FIG1_PANELB),FIG1_PANELSCD)
 FIGURE1.save('./figures/Figure01_ScanGroups.png')
 
 # ![](./figures/Figure01_ScanGroups.png)
-#
-# <img scr='./figures/Figure01_ScanGroups.png' />
 
 # ***
 # # 4. Create Figure 4
@@ -340,7 +338,7 @@ EXTRA_FIGURE1.save('./images/extramaterials01_segments_per_run.png')
 #
 # > On the bottom panel, we can observe that EO segments are much more promininent in awake scans (left). In fact in all instances they account for more than 95% of the scan duration (which is enforced by how we defined awake scans). Conversely for drowsy scans, EO periods account for much less of a run (right)
 #
-# <img src='./images/extramaterials01_segments_per_run.png'>
+# ![](./images/extramaterials01_segments_per_run.png)
 #
 # ***
 #
@@ -373,7 +371,7 @@ EXTRA_FIGURE2.save('./images/extramaterials02_ECdistribution.png')
 #
 # > We can see the majority of eye closure segments fall below the 60 second mark
 #
-# <img src='./images/extramaterials02_ECdistribution.png'>
+# ![](./images/extramaterials02_ECdistribution.png)
 #
 # Third, generate figure with information about eye opening segments
 
@@ -393,4 +391,6 @@ EXTRA_FIGURE3.save('./images/extramaterials03_EOdistribution.png')
 
 # Equivalent depiction for EO semgents.
 #
-# <img src='./images/extramaterials03_EOdistribution.png'>
+# ![](./images/extramaterials03_EOdistribution.png)
+
+
