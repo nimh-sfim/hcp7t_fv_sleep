@@ -12,7 +12,7 @@ ATLAS_NAME  = 'Schaefer2018_200Parcels_7Networks'
 # ================================
 DATA_DIR    = '/data/SFIMJGC_HCP7T/HCP7T'
 SCRIPTS_DIR = '/data/SFIMJGC_HCP7T/hcp7t_fv_sleep'
-ATLAS_DIR   = ops.join(DATA_DIR,'Atlases',ATLAS_NAME)
+ATLAS_DIR   = osp.join(DATA_DIR,'Atlases',ATLAS_NAME)
 
 # XNAT Credentials
 # ================
