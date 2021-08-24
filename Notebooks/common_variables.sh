@@ -8,4 +8,5 @@ export ATLAS_DIR=/data/SFIMJGC_HCP7T/HCP7T/Atlases/
 export ATLAS_NAME=Schaefer2018_200Parcels_7Networks
 export POLORT=5
 export VOLS_DISCARD=10
+export BLUR_FWHM=4
 export ROI_FV_PATH=`echo ${DATA_DIR}/ALL/ALL_ROI.V4.mPP.nii.gz`

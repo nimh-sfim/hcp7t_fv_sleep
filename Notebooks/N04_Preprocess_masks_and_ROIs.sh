@@ -55,9 +55,25 @@ echo "==========================================================================
 # =========================================================
 echo "++ INFO: (4) Resameple original masks to EPI grid prior to eroding"
 echo "=================================================================="
+# The masks provided by XNAT central sometimes contain a few voxels with flat timeseries on the borders. To avoid these voxels contributing to any calculations, 
+# we will restrict all masks to only contain voxels that fall within the automask in all runs
+# Compute automask per run
+available_runs=`find ./ -name 'rfMRI_REST?_??_mPP.nii.gz'`
+for RUN_PATH in ${available_runs}
+do
+    RUN=`echo ${RUN_PATH} | awk -F '/' '{print $2}'`
+    3dAutomask -overwrite -prefix ./${RUN}/${RUN}_mPP.automask.nii.gz ${RUN_PATH}
+done
+available_automasks=`find ./ -name 'rfMRI_REST?_??_mPP.automask.nii.gz' | tr -s '\n' ' '`
+echo "++ INFO: Available automasks: ${available_automasks}"
+3dMean -overwrite -prefix ROI.automask.nii.gz ${available_automasks}
+3dcalc -overwrite -prefix ROI.automask.nii.gz -expr 'equals(a,1)' -a ROI.automask.nii.gz
+
+# Moving forward we will use ROI.automask.nii.gz to restrict all tissue masks
 for prefix in ROI.GM ROI.V4 ROI.Vl ROI.WM ROI.FB
 do
     3dresample -overwrite -rmode NN -inset ${prefix}.nii.gz -master ${mPP_GRID} -prefix ${prefix}.mPP.nii.gz
+    3dcalc -overwrite -a ${prefix}.mPP.nii.gz -b ROI.automask.nii.gz -expr 'a*b' -prefix ${prefix}.mPP.nii.gz
 done
 
 # (5) Erode the masks in original anat space
@@ -81,6 +97,7 @@ do
            -inset   ${prefix}_e.nii.gz     \
            -master  ${mPP_GRID}            \
            -prefix  ${prefix}_e.mPP.nii.gz
+    3dcalc -overwrite -a ${prefix}_e.mPP.nii.gz -b ROI.automask.nii.gz -expr 'a*b' -prefix ${prefix}_e.mPP.nii.gz
     rm ${prefix}_e.nii.gz
 done 
 
@@ -95,9 +112,18 @@ echo " +       3dresample -overwrite -inset ${ATLAS_PATH} -rmode NN -master  ${m
            -master  ${mPP_GRID}      \
            -prefix  Schaefer2018_200Parcels.mPP.nii.gz
 
-# (8) We then constrain the Atlas to the GM ribbon of each particular subject
+# (8) Set the table label and correct space in the subject specific atlas file
+# ============================================================================
+echo "++ INFO: (8) Set the table label and correct space in the subject specific atlas file"
+echo "====================================================================================="
+echo " +       3drefit -space MNI -labeltable ${ATLAS_DIR}/${ATLAS_NAME}/${ATLAS_NAME}_order.niml.lt Schaefer2018_200Parcels.mPP.nii.gz"
+3drefit -space MNI \
+        -labeltable ${ATLAS_DIR}/${ATLAS_NAME}/${ATLAS_NAME}_order.niml.lt \
+        Schaefer2018_200Parcels.mPP.nii.gz
+        
+# (9) We then constrain the Atlas to the GM ribbon of each particular subject
 # ===========================================================================
-echo "++ INFO: (8) We then constrain the Atlas to the GM ribbon of each particular subject"
+echo "++ INFO: (9) We then constrain the Atlas to the GM ribbon of each particular subject"
 echo "===================================================================================="
 echo " +       3dcalc     -overwrite -a Schaefer2018_200Parcels.mPP.nii.gz -b ROI.GM.mPP.nii.gz -expr 'a*b' -prefix Schaefer2018_200Parcels.mPP.nii.gz"
 3dcalc     -overwrite                                   \
@@ -106,15 +132,6 @@ echo " +       3dcalc     -overwrite -a Schaefer2018_200Parcels.mPP.nii.gz -b RO
            -expr 'a*b'                                  \
            -prefix Schaefer2018_200Parcels.mPP.nii.gz 
 
-# (9) Set the table label and correct space in the subject specific atlas file
-# ============================================================================
-echo "++ INFO: (9) Set the table label and correct space in the subject specific atlas file"
-echo "====================================================================================="
-echo " +       3drefit -space MNI -labeltable ${ATLAS_DIR}/${ATLAS_NAME}/${ATLAS_NAME}_order.niml.lt Schaefer2018_200Parcels.mPP.nii.gz"
-3drefit -space MNI \
-        -labeltable ${ATLAS_DIR}/${ATLAS_NAME}/${ATLAS_NAME}_order.niml.lt \
-        Schaefer2018_200Parcels.mPP.nii.gz
-        
 echo "=================================="
 echo "++ INFO: Script finished correctly"
 echo "=================================="

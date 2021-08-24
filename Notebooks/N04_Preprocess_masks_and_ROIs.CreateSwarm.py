@@ -39,6 +39,7 @@
 #     
 # In MNI Space with fMRI grid:
 #
+#  * ```ROI.automask.nii.gz```: Subject-specific Full brain mask that only includes voxels with data on all rest runs. This is used to constrain all other masks.
 #  * ```ROI.FB.mPP.nii.gz```: Subject-specific Full brain mask (copy of brainmask_fs.nii.gz)
 #  * ```ROI.GM.mPP.nii.gz```: Subject-specific GM Cortical ribbon (GM_Ribbon.nii.gz as downloaded from ConnectomeDB also contains masks for WM)
 #  * ```ROI.V4.mPP.nii.gz```: Subject-specific Forth Ventricle mask
@@ -141,7 +142,7 @@ for sbj in Sbjs:
 
 # %%time
 for sbj in Sbjs:
-    for file in ['ROI.FB.nii.gz',       'ROI.GM.nii.gz',       'ROI.V4.nii.gz',       'ROI.Vl.nii.gz',       'ROI.WM.nii.gz', 
+    for file in ['ROI.automask.nii.gz','ROI.FB.nii.gz',       'ROI.GM.nii.gz',       'ROI.V4.nii.gz',       'ROI.Vl.nii.gz',       'ROI.WM.nii.gz', 
                  'ROI.FB.mPP.nii.gz',   'ROI.GM.mPP.nii.gz',   'ROI.V4.mPP.nii.gz',   'ROI.Vl.mPP.nii.gz',   'ROI.WM.mPP.nii.gz',
                  'ROI.FB_e.mPP.nii.gz', 'ROI.GM_e.mPP.nii.gz', 'ROI.V4_e.mPP.nii.gz', 'ROI.Vl_e.mPP.nii.gz', 'ROI.WM_e.mPP.nii.gz',
                  'Schaefer2018_200Parcels.mPP.nii.gz']:
