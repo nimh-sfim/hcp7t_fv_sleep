@@ -11,8 +11,6 @@ source ./common_variables.sh
 # =======================
 echo "++ INFO: (0) Prepare the computing environment"
 echo "=============================================="
-# Group-level Forth Ventricle ROI
-ROI_FV_PATH=`echo ${DATA_DIR}/ALL/ALL_ROI.V4.mPP.nii.gz`
 echo " + INFO: Group-level FV ROI: ${ROI_FV_PATH}"
 
 # Enter scripts directory
