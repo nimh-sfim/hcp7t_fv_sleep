@@ -39,16 +39,23 @@ Here, we use the 200 ROI version of the Scheffer Atlas (https://github.com/Thoma
 
 **1. Configure your local version of the Repository**
 
-   a. Provide the correct values to the ```DATA_DIR``` and ```SCRIPTS_DIR``` variables in ```utils/variables.py```.
+   a. Provide the correct values to the ```DATA_DIR```, ```SCRIPTS_DIR``` and ```ATLAS_DIR``` variables in ```utils/variables.py```.
    
    * ```DATA_DIR```: folder where you want to download the HCP dataset and perform all necessary analyses
    * ```SCRIPTS_DIR```: folder where you downloaded this repository
+   * ```ATLAS_DIR```: folder where you placed the Schaefer atlas sub-folder.
    
    b. provide your XNAT central user and password in ```utils/variables.py```.
    
    * ```XNAT_USER```: provide your username
    * ```XANT_PASSWORD```: provide your password
    
+   c. Similarly, you also need to provide the correct values for equivalent bash variables in ```Notebooks/common_variables.sh```
+   
+   * ```DATA_DIR``` : folder where you want to download the HCP dataset and perform all necessary analyses
+   * ```SCRIPTS_DIR```: folder where you downloaded this repository
+   * ```ATLAS_DIR```: folder where you placed the Schaefer atlas sub-folder.
+     
 **2. Create the necessary conda environments**
 
 To run this code you will need two separate conda environments:
@@ -91,4 +98,10 @@ Next, notebook ```N04_Preprocess_mask_and_ROIs``` will create a series of subjec
 
 > NOTE: This part of the analyses rely on AFNI and scripts are designed to be run in a parallel computer cluster. They may need to be modified for your own computing environment.
 
+**8. Extract Representative FV, Lat Vent, WM, GM and Global Signal**
 
+Notebook ```N05_Extract_ROI_TS``` will extract representative timeseries for a few tissue compartments directly from the minimally pre-processed data. The only step prior to extracting the time-series is to convert each voxel timeseries into signal percent units.
+
+> NOTE: This part of the analyses rely on AFNI and scripts are designed to be run in a parallel computer cluster. They may need to be modified for your own computing environment.
+
+**9. **
