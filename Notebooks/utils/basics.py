@@ -1,4 +1,4 @@
-from .variables import RUNS, DATA_DIR, ProjectFiles_DF_Path, QA1_Results_DF_Path
+from .variables import RUNS, DATA_DIR, ProjectFiles_DF_Path, QA1_Results_DF_Path, Resources_Dir
 import pandas as pd
 import numpy  as np
 import os.path as osp
@@ -12,6 +12,18 @@ def get_7t_subjects():
   return sbj_list
 
 def get_available_runs(when='post_download'):
+    """
+    This function returns a list with all run names available at different times during the 
+    analyses according to the when parameter.
+    
+    Inputs
+    ------
+    when: str with three possible values post_download, post_qa1, final
+    
+    Outputs
+    -------
+    out_list: list of strings with run names.
+    """
     out_list = []
     # List of runs for which fMRI data was acquired
     if when == 'post_download':
@@ -24,6 +36,12 @@ def get_available_runs(when='post_download'):
             sbj = str(row['Sbj'])
             run = str(row['Run'])
             out_list.append('_'.join([sbj,run]))
+    if when == 'final':
+        path_awake  = osp.join(Resources_Dir,'Run_List_Awake.txt')
+        path_drowsy = osp.join(Resources_Dir,'Run_List_Drowsy.txt')
+        awake_list  = list(np.loadtxt(path_awake,dtype=str))
+        drowsy_list = list(np.loadtxt(path_drowsy,dtype=str))
+        out_list    = awake_list + drowsy_list
     return out_list
 
 def load_motion_info(sbjs, verbose=False, fillnan=True, write_FD=False):
