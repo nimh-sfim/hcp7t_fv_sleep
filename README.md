@@ -104,4 +104,8 @@ Notebook ```N05_Extract_ROI_TS``` will extract representative timeseries for a f
 
 > NOTE: This part of the analyses rely on AFNI and scripts are designed to be run in a parallel computer cluster. They may need to be modified for your own computing environment.
 
-**9. **
+**9. Run all pre-processing steps beyond mPP**
+
+Notebook ```N06_mPP_postProcessing.CreateSwarm``` will run a few different pre-processing pipelines described in the manuscript (i.e., basic, compcor).
+
+> NOTE: This part of the analyses rely on AFNI and scripts are designed to be run in a parallel computer cluster. They may need to be modified for your own computing environment.
