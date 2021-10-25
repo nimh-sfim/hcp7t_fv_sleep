@@ -11,14 +11,15 @@ def get_7t_subjects():
   sbj_list = list(df['Sbj'].unique())
   return sbj_list
 
-def get_available_runs(when='post_download'):
+def get_available_runs(when='post_download', type='all'):
     """
     This function returns a list with all run names available at different times during the 
     analyses according to the when parameter.
     
     Inputs
     ------
-    when: str with three possible values post_download, post_qa1, final
+    when: str with three possible values: post_download, post_qa1, final
+    type: str with three possible values: all, drowsy, awake. This only applies if when = final
     
     Outputs
     -------
@@ -41,7 +42,12 @@ def get_available_runs(when='post_download'):
         path_drowsy = osp.join(Resources_Dir,'Run_List_Drowsy.txt')
         awake_list  = list(np.loadtxt(path_awake,dtype=str))
         drowsy_list = list(np.loadtxt(path_drowsy,dtype=str))
-        out_list    = awake_list + drowsy_list
+        if type == 'all':
+            out_list    = awake_list + drowsy_list
+        elif type == 'awake':
+            out_list = awake_list
+        elif type == 'drowsy':
+            out_list = drowsy_list
     return out_list
 
 def load_motion_info(sbjs, verbose=False, fillnan=True, write_FD=False):
