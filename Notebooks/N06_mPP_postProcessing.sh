@@ -130,6 +130,8 @@ rm ${RUN}_mPP_AFNI_CompCorr_Regressors0?.1D
 rm ${RUN}_mPP_AFNI_CompCorr_Regressors_eig.1D
 echo " + OUPUT: AFNI CompCorr Regressors File ${RUN}_AFNI_CompCorr_Regressors_vec.1D"
 
+echo "++ INFO: (7) Generating Behzadi-style CompCorr regressors"
+echo "++ ======================================================"
 # (7) Generate CompCorr regressors (Behzadi Style)
 # ================================================
 # 7.1 Extract PCA from detrended dataset (to match later regression)
