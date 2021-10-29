@@ -78,7 +78,7 @@ for sbj_run in Manuscript_Runs:
 # Now we need to submit the Swarm file to the biowulf system:
 #
 # ```bash
-# # cd /data/SFIMJGC_HCP7T/PRJ_Sleep/Notebooks/mPP_analysis/
+# # cd /data/SFIMJGC_HCP7T/hpc7t_fv_sleep/Notebooks/
 # # rm ./N07_RapidTide.logs/*
 # swarm -f ./N07_RapidTide.SWARM.sh -g 128 -t 32 --partition quick,norm --logdir ./N07_RapidTide.logs
 # watch -n 30 squeue -u javiergc
