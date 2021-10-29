@@ -19,7 +19,7 @@
 #
 # * Compute the spectrograms for each run separately using the Welch method. This part is done in parallel via swarm jobs. The main output for each job is: ```/data/SFIMJGC_HCP7T/HCP7T/${SBJ}/${RUN}/${RUN}.Signal.V4_grp.welch.pkl```
 # * Looks for statistical differences in power spectra between awake and drowsy scans
-# * Generate Panel A of figure 4
+# * Generate Panel A of figure 5
 #
 # > Link about units for PSD: DBs description in https://stackoverflow.com/questions/15255632/what-is-the-psd-unit-by-using-fft-method (Yet we will not work with DBs)
 
@@ -203,6 +203,8 @@ fig
 
 # ### 6. Save Figures to disk
 
+# + tags=[]
 fig.savefig('./figures/Fig05_PanelA.png')
+# -
 
 
