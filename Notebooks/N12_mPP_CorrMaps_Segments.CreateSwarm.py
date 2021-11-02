@@ -98,23 +98,10 @@ for item in Manuscript_Runs:
             vols = '[{onset}..{offset}]'.format(onset=int(row['Onset']),offset=int(row['Offset']))
             segment_uuid = row['Segment_UUID']
             os.system('echo "export SBJ={sbj} RUN={run} VOLS={vols} TYPE=EO UUID={segment_uuid}; sh ./N12_mPP_CorrMaps_Segments.sh" >> ./N12_mPP_CorrMaps_Segments.SWARM.sh'.format(sbj=sbj, run=run, vols=vols, segment_uuid=segment_uuid))
-
-# + [markdown] tags=[]
-# ***
-# # Prepare Atlas Files
-#
-# Run the code below on a terminal on a biowulf node to make sure that you have clean directories before you run the job
 # -
 
-# ```bash
-# # cd /data/SFIMJGC_HCP7T/HCP7T/ALL
-# 3dMean     -overwrite -prefix ROI.ALL.GM.mPP.avg.nii.gz ../??????/ROI.GM.mPP.nii.gz
-# 3dcalc     -overwrite -a ROI.ALL.GM.mPP.avg.nii.gz -expr 'step(a-0.5)' -prefix ROI.ALL.GM.mPP.mask.nii.gz
-# 3dresample -overwrite -input ../Atlases/Schaefer2018_200Parcels_7Networks/Schaefer2018_200Parcels_7Networks_order_FSLMNI152_2mm.nii.gz -rmode NN -master ROI.ALL.GM.mPP.mask.nii.gz -prefix Schaefer2018_200Parcels_7Networks_order_mPP.nii.gz
-# 3drefit    -space MNI Schaefer2018_200Parcels_7Networks_order_mPP.nii.gz
-# 3dcalc     -overwrite -a Schaefer2018_200Parcels_7Networks_order_mPP.nii.gz -b ROI.ALL.GM.mPP.mask.nii.gz -expr 'a*b' -prefix Schaefer2018_200Parcels_7Networks_order_mPP.GM_Ribbon.nii.gz
-# ```
-
+# ***
+#
 # # Run Swarm Jobs
 #
 # Becuase each scan segment has a unique identifier that gets generated every time you run the previous cell, it is very important to make sure that every time that you run this code you start with clean directories. 
