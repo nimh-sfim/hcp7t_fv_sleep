@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.9.1
+#       jupytext_version: 1.12.0
 #   kernelspec:
 #     display_name: hcp7t_fv_sleep_env
 #     language: python
@@ -98,6 +98,7 @@ print(output.strip().decode())
 
 command = 'module load afni; \
            cd {atlas_dir}; \
+           3drefit -space MNI {atlas}_order_FSLMNI152_2mm.nii.gz; \
            @MakeLabelTable -lab_file {atlas}_order.txt 1 0 -labeltable {atlas}_order.niml.lt -dset {atlas}_order_FSLMNI152_2mm.nii.gz;'.format(atlas_dir=ATLAS_DIR, atlas=ATLAS_NAME) 
 output  = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
 print(output.strip().decode())
