@@ -51,12 +51,7 @@
 #  * ```ROI.FB_e.mPP.nii.gz```: Subject-specific Full brain mask (copy of brainmask_fs.nii.gz)
 #  * ```ROI.GM_e.mPP.nii.gz```: Subject-specific GM Cortical ribbon (GM_Ribbon.nii.gz as downloaded from ConnectomeDB also contains masks for WM)
 #  * ```ROI.V4_e.mPP.nii.gz```: Subject-specific Forth Ventricle mask
-#  * ```ROI.Vl_e.mPP.nii.gz```: Subject-specific Lateral Ventricles mask
-#  * ```ROI.WM_e.mPP.nii.gz```: Subject-specific WM mask
-#
-# 5. Create a subject specific version of the Schefer atlas by constraining ROIs to voxels inside each subject's GM ribbon (prior to erosion)
-#
-# * ```Shaeffer2018_200Parcels.mPP.nii.gz```
+#  * ```ROI.Vl_e.mPP.nii.gz```: Subject-specific Lateral Ventricles mask * ```ROI.WM_e.mPP.nii.gz```: Subject-specific WM mask
 #
 # ***
 # > **IMPORTANT NOTE:** Parts of this study were conducted using the NIH's High Performance Computing system (https://hpc.nih.gov). The code in this notebook generates a swarm file that permits parallel pre-processing of all runs using that particular system. This code may need to be modified for your particular computational environment.
@@ -113,21 +108,21 @@ print('++ INFO: Number of Subjects: %d' % len(Sbjs))
 
 # Create log dir for swarm jobs to write their output and error messages
 # ======================================================================
-if not osp.exists('./N04_Preprocess_masks_and_ROIs.logs'):
-    print('++ INFO: Creating logging dir: N04_Preprocess_masks_and_ROIs.logs')
-    os.mkdir('./N04_Preprocess_masks_and_ROIs.logs')
+if not osp.exists('./N04a_Preprocess_masks_and_ROIs.logs'):
+    print('++ INFO: Creating logging dir: N04a_Preprocess_masks_and_ROIs.logs')
+    os.mkdir('./N04a_Preprocess_masks_and_ROIs.logs')
 
 # Create Swarm file for extracting representative power
 # ======================================================
-os.system('echo "#swarm -f ./N04_Preprocess_masks_and_ROIs.SWARM.sh -g 16 -t 16 --partition quick,norm --module afni --logdir ./N04_Preprocess_masks_and_ROIs.logs" > ./N04_Preprocess_masks_and_ROIs.SWARM.sh')
+os.system('echo "#swarm -f ./N04a_Preprocess_masks_and_ROIs.SWARM.sh -g 16 -t 16 --partition quick,norm --module afni --logdir ./N04a_Preprocess_masks_and_ROIs.logs" > ./N04a_Preprocess_masks_and_ROIs.SWARM.sh')
 for sbj in Sbjs:
-    os.system('echo "export SBJ={sbj}; ./N04_Preprocess_masks_and_ROIs.sh" >> ./N04_Preprocess_masks_and_ROIs.SWARM.sh'.format(sbj=sbj))
+    os.system('echo "export SBJ={sbj}; ./N04a_Preprocess_masks_and_ROIs.sh" >> ./N04a_Preprocess_masks_and_ROIs.SWARM.sh'.format(sbj=sbj))
 
 # ***
 # # 5. Submit jobs to the cluster
 #
 # ```bash
-# swarm -f ./N04_Preprocess_masks_and_ROIs.SWARM.sh -g 16 -t 16 --partition quick,norm --module afni --logdir ./N04_Preprocess_masks_and_ROIs.logs
+# swarm -f ./N04a_Preprocess_masks_and_ROIs.SWARM.sh -g 16 -t 16 --partition quick,norm --module afni --logdir ./N04a_Preprocess_masks_and_ROIs.logs
 # ```
 #
 # You can check the status of your jobs with
@@ -145,8 +140,7 @@ for sbj in Sbjs:
 for sbj in Sbjs:
     for file in ['ROI.automask.nii.gz','ROI.FB.nii.gz',       'ROI.GM.nii.gz',       'ROI.V4.nii.gz',       'ROI.Vl.nii.gz',       'ROI.WM.nii.gz', 
                  'ROI.FB.mPP.nii.gz',   'ROI.GM.mPP.nii.gz',   'ROI.V4.mPP.nii.gz',   'ROI.Vl.mPP.nii.gz',   'ROI.WM.mPP.nii.gz',
-                 'ROI.FB_e.mPP.nii.gz', 'ROI.GM_e.mPP.nii.gz', 'ROI.V4_e.mPP.nii.gz', 'ROI.Vl_e.mPP.nii.gz', 'ROI.WM_e.mPP.nii.gz',
-                 'Schaefer2018_200Parcels.mPP.nii.gz']:
+                 'ROI.FB_e.mPP.nii.gz', 'ROI.GM_e.mPP.nii.gz', 'ROI.V4_e.mPP.nii.gz', 'ROI.Vl_e.mPP.nii.gz', 'ROI.WM_e.mPP.nii.gz']:
         aux_path = osp.join(DATA_DIR,sbj,file)
         if not osp.exists(aux_path):
             print ('++ WARNING: Output missing [%s]' % aux_path)
