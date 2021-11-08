@@ -14,7 +14,7 @@
 # ---
 
 # + [markdown] tags=[]
-# # Description - Create Figures regarding the Spectrogram Analyses
+# #### Description - Create Figures regarding the Spectrogram Analyses
 #
 # The primary outputs of this notebook include:
 #
@@ -37,6 +37,8 @@ from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
 import hvplot.pandas
 import panel as pn
+
+from scipy.stats import ttest_ind
 
 # %matplotlib inline
 # -
@@ -145,6 +147,7 @@ axes[2].legend(['Avg. PSD in Sleep Band [0.03 - 0.07 Hz]','Avg. PSD in Control F
 
 fig.savefig('./figures/Fig03_PSDexplanation.png')
 
+# + [markdown] tags=[]
 # ***
 # # Figure 6: Evolution of PSD across scan types
 #
@@ -157,8 +160,8 @@ Awake_Runs      = get_available_runs(when='final', type='awake')
 Drowsy_Runs     = get_available_runs(when='final', type='drowsy')
 
 print('++ INFO: Number of Runs: Total = %d | Awake = %d | Drowsy = %d' % (len(Manuscript_Runs), len(Awake_Runs), len(Drowsy_Runs)))
-# -
 
+# + [markdown] tags=[]
 # ***
 # ### Load PSD in Sleep Band
 #
@@ -355,3 +358,62 @@ for items,filename in zip([GS_Top100_Runs,GS_Bot100_Runs,PSD_Top100_Runs,PSD_Bot
     with open(path, 'w') as filehandle:
         for listitem in items:
             filehandle.write('%s\n' % listitem)
+# -
+
+# # Statistical Differences in PSDsleep and GS at the Scan Level
+
+ScanLevelMetrics_df = pd.DataFrame(index=GS_df.columns, columns=['PSDsleep','GSamplitude','Scan Type'])
+ScanLevelMetrics_df['GSamplitude'] = GS_df.std().values
+ScanLevelMetrics_df['PSDsleep']    = sleep_psd_DF.mean()
+ScanLevelMetrics_df.loc[(scans_rank.index.isin(Awake_Runs),'Scan Type')] = 'Awake'
+ScanLevelMetrics_df.loc[(scans_rank.index.isin(Drowsy_Runs),'Scan Type')] = 'Drowsy'
+
+ScanLevelMetrics_df.head()
+
+Fig09_panelA = ScanLevelMetrics_df.hvplot.box(y='GSamplitude',by='Scan Type',c='Scan Type', cmap={'Awake':'orange','Drowsy':'lightblue'}, legend=False, title='(A)',fontsize={'title':16,'ylabel':14, 'xlabel':14, 'xticks':14, 'yticks':14}).opts(toolbar=None)
+Fig09_panelC = ScanLevelMetrics_df.hvplot.box(y='PSDsleep',by='Scan Type',c='Scan Type', cmap={'Awake':'orange','Drowsy':'lightblue'}, legend=False, title='(C)',fontsize={'title':16,'ylabel':14, 'xlabel':14, 'xticks':14, 'yticks':14}).opts(toolbar=None)
+
+print('++ INFO: Ttest results for GSamplitude')
+ttest_ind(ScanLevelMetrics_df['GSamplitude'][ScanLevelMetrics_df['Scan Type']=='Drowsy'],ScanLevelMetrics_df['GSamplitude'][ScanLevelMetrics_df['Scan Type']=='Awake'], alternative='greater')
+
+print('++ INFO: Scan Level Results (PSDsleep)')
+print(' +       '+ str(ttest_ind(ScanLevelMetrics_df['PSDsleep'][ScanLevelMetrics_df['Scan Type']=='Drowsy'],ScanLevelMetrics_df['PSDsleep'][ScanLevelMetrics_df['Scan Type']=='Awake'], alternative='greater')))
+print('++ INFO: Scan Level Results (GSamplitude)')
+print(' +       '+ str(ttest_ind(ScanLevelMetrics_df['GSamplitude'][ScanLevelMetrics_df['Scan Type']=='Drowsy'],ScanLevelMetrics_df['GSamplitude'][ScanLevelMetrics_df['Scan Type']=='Awake'], alternative='greater')))
+
+# # Statistical Differences in PSDsleep and GS at the Segment Level
+
+sleep_psd_DF.index = sleep_psd_DF.index.total_seconds()
+EO_segments_info = pd.read_pickle('../Resources/EO_Segments_Info.pkl')
+EO_segments_info = EO_segments_info[EO_segments_info['Duration']>=60]
+EC_segments_info = pd.read_pickle('../Resources/EC_Segments_Info.pkl')
+EC_segments_info = EC_segments_info[EC_segments_info['Duration']>=60]
+XX_segments_info = pd.concat([EO_segments_info,EC_segments_info])
+XX_segments_info.reset_index(drop=True, inplace=True)
+
+Number_of_Segments = XX_segments_info.shape[0]
+SegmentLevelMetrics_df = pd.DataFrame(index=np.arange(Number_of_Segments),columns=['PSDsleep','GSamplitude','Segment Type'])
+
+SegmentType_Label_dict = {'EC':'Eyes Closed','EO':'Eyes Open'}
+for r,row in XX_segments_info.iterrows():
+    SegmentLevelMetrics_df.loc[r,'GSamplitude']  = GS_df.loc[int(row['Onset']):int(row['Offset']), row['Run']].std()
+    SegmentLevelMetrics_df.loc[r,'PSDsleep']     = sleep_psd_DF.loc[(sleep_psd_DF.index >= row['Onset']) & (sleep_psd_DF.index <= row['Offset']),row['Run']].mean()
+    SegmentLevelMetrics_df.loc[r,'Segment Type'] = SegmentType_Label_dict[row['Type']]
+SegmentLevelMetrics_df = SegmentLevelMetrics_df.infer_objects()
+
+Fig09_panelB = SegmentLevelMetrics_df.hvplot.box(y='GSamplitude',by='Segment Type',c='Segment Type', cmap={'Eyes Open':'orange','Eyes Closed':'lightblue'}, legend=False, title='(B)',fontsize={'title':16,'ylabel':14, 'xlabel':14, 'xticks':14, 'yticks':14}, shared_axes=False).opts(toolbar=None)
+Fig09_panelD = SegmentLevelMetrics_df.hvplot.box(y='PSDsleep',   by='Segment Type',c='Segment Type', cmap={'Eyes Open':'orange','Eyes Closed':'lightblue'}, legend=False, title='(D)',fontsize={'title':16,'ylabel':14, 'xlabel':14, 'xticks':14, 'yticks':14}, shared_axes=False).opts(toolbar=None)
+
+print('++ INFO: Segment Level Results (PSDsleep)')
+print(' +       '+ str(ttest_ind(SegmentLevelMetrics_df['PSDsleep'][SegmentLevelMetrics_df['Segment Type']=='Eyes Closed'],SegmentLevelMetrics_df['PSDsleep'][SegmentLevelMetrics_df['Segment Type']=='Eyes Open'], alternative='greater')))
+print('++ INFO: Segment Level Results (GSamplitude)')
+print(' +       '+ str(ttest_ind(SegmentLevelMetrics_df['GSamplitude'][SegmentLevelMetrics_df['Segment Type']=='Eyes Closed'],SegmentLevelMetrics_df['GSamplitude'][SegmentLevelMetrics_df['Segment Type']=='Eyes Open'], alternative='greater')))
+
+Figure09 = pn.Column(pn.Row(Fig09_panelA,Fig09_panelB),
+                     pn.Row(Fig09_panelC,Fig09_panelD))
+
+Figure09
+
+Figure09.save('./figures/Fig09_StatDiff_PSDsleep_GSamplitude.png')
+
+
