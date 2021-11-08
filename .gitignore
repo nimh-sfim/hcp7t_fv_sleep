@@ -1,6 +1,6 @@
 Resources/
-Notebooks/N04_Preprocess_masks_and_ROIs.SWARM.sh
-Notebooks/N04_Preprocess_masks_and_ROIs.logs/
+Notebooks/N04a_Preprocess_masks_and_ROIs.SWARM.sh
+Notebooks/N04a_Preprocess_masks_and_ROIs.logs/
 Notebooks/N05_Extract_ROI_TS.SWARM.sh
 Notebooks/N05_Extract_ROI_TS.logs/
 Notebooks/N06_mPP_postProcessing.logs/
