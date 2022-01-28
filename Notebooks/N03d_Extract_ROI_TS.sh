@@ -11,7 +11,8 @@ source ./common_variables.sh
 # =======================
 echo "++ INFO: (0) Prepare the computing environment"
 echo "=============================================="
-echo " + INFO: Group-level FV ROI: ${ROI_FV_PATH}"
+echo " + INFO: Group-level FV ROI:  ${ROI_FV_PATH}"
+echo " + INFO: Group-level iFV ROI: ${ROI_FVlt_PATH}"
 
 # Enter scripts directory
 # =======================
@@ -47,7 +48,7 @@ nifti_tool -strip_extras -overwrite -infiles ${RUN}_mPP.scale.nii.gz
 # =======================================================================================
 echo "++ INFO: (2) Extract Representative Timseries from the minimally pre-processed data in SPC units"
 echo "================================================================================================"
-for items in ${ROI_FV_PATH},'V4_grp' ../ROI.V4_e.mPP.nii.gz,'V4_e' ../ROI.Vl_e.mPP.nii.gz,'Vl_e' ../ROI.GM.mPP.nii.gz,'GM' ../ROI.FB.mPP.nii.gz,'FB' ../ROI.WM_e.mPP.nii.gz,'WM_e'
+for items in ${ROI_FV_PATH},'V4_grp' ${ROI_FVlt_PATH},'V4lt_grp' ${ROI_FVut_PATH},'V4ut_grp' ../ROI.V4_e.mPP.nii.gz,'V4_e' ../ROI.Vl_e.mPP.nii.gz,'Vl_e' ../ROI.GM.mPP.nii.gz,'GM' ../ROI.FB.mPP.nii.gz,'FB' ../ROI.WM_e.mPP.nii.gz,'WM_e'
 do 
    IFS="," ; set -- $items
    echo " + INFO: Mask = $1 | Suffix = $2 --> Output = ${RUN}_mPP.Signal.$2.1D"
