@@ -20,12 +20,9 @@ echo "++ ======================================"
 3dROIstats -nobriklab -mask ${RUN}_orig.mask.FV.manual.dil01.nii.gz ${RUN}_orig.detrend.nii.gz  > ${RUN}_orig.detrend.FV.dil01.mean.csv
 
 echo "++ INFO: Create additional version (k) of the manually corrected mask"
-echo "++ ============================================================================"
+echo "++ =================================================================="
 3dcalc  -overwrite -a ${RUN}_orig.mask.FV.manual.nii.gz -expr 'k*a' -prefix ${RUN}_orig.mask.FV.manual.k.nii.gz
-#3dmerge -overwrite -1rank -prefix ${RUN}_orig.mask.FV.manual.rank.nii.gz ${RUN}_orig.mask.FV.manual.k.nii.gz
-
 3dcalc  -overwrite -a ${RUN}_orig.mask.FV.manual.dil01.nii.gz -expr 'k*a' -prefix ${RUN}_orig.mask.FV.manual.dil01.k.nii.gz
-#3dmerge -overwrite -1rank -prefix ${RUN}_orig.mask.FV.manual.dil01.rank.nii.gz ${RUN}_orig.mask.FV.manual.dil01.k.nii.gz
 
 echo "++ INFO: Extract slice-by-slice profile"
 echo "++ ===================================="

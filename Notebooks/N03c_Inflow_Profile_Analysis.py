@@ -13,6 +13,21 @@
 #     name: hcp7t_fv_sleep_env
 # ---
 
+# # Description
+#
+# This notebook completes the preliminary analyses looking to whether or not singals in the 4th ventricle follow an inflow-like profile of decreasing intensity across succesive slides. These analyses were conducted on a subset of subjects, as FV ROIs are not available in original space. This notebook performs the following operations.
+#
+# 1. Select a subset of scans on which we will focus our attention. We will select scans with low motion marked as drowsy.
+# 2. Load the manually obtained location of the obex, dorsomedial recess and aqueduct of Sylvius.
+# 3. Do a first pass at generating the ROIs in orig space in a pseduo-automatic manner. Those will need a lot of manual correction, but it provides us with some priors for drawing the ROIs.
+#
+# After manual correction of ROIs is performed, the notebook continues with the next steps:
+#
+# 4. Create the mean across all 20 scans (backgound in Figure 2.A and B)
+# 5. Extract ROI-wise and slice-wise represenative timeseries for the FV
+# 6. Compute slice timing informaiton (Figure 2.C)
+# 7. Compute slice-wise 95th to 5ht percentile ratio (Figure 2.D - F)
+
 # +
 import os
 import pandas as pd
@@ -38,7 +53,7 @@ import matplotlib
 from utils.basics import load_segments
 import xarray as xr
 import subprocess
-
+import csv 
 sns.set(font_scale=2)
 # -
 Nacq = 890
@@ -104,6 +119,11 @@ hv.VLine(aqs_location).opts(line_width=2, line_dash='dashed')
 
 selected_scans_df.drop('782561_rfMRI_REST2_AP', inplace=True)
 selected_scans_list = list(selected_scans_df.index)
+
+# Save the list of selected scans to disk ```Resources/Inflow_Profile_Selected_Scans.csv``` so that we can access it from other notebooks
+
+selected_scans_path = osp.join(Resources_Dir,'Inflow_Profile_Selected_Scans.csv')
+pd.Series(selected_scans_list).to_csv(selected_scans_path, index=False, header=False)
 
 # ***
 #
