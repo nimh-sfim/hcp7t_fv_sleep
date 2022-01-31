@@ -52,6 +52,7 @@
 #  * ```ROI.GM_e.mPP.nii.gz```: Subject-specific GM Cortical ribbon (GM_Ribbon.nii.gz as downloaded from ConnectomeDB also contains masks for WM)
 #  * ```ROI.V4_e.mPP.nii.gz```: Subject-specific Forth Ventricle mask
 #  * ```ROI.Vl_e.mPP.nii.gz```: Subject-specific Lateral Ventricles mask * ```ROI.WM_e.mPP.nii.gz```: Subject-specific WM mask
+#  * ```ROI.compcorr.mPP.nii.gz```: Subject-specific combined ventricular and WM mask for CompCorr
 #
 # ***
 # > **IMPORTANT NOTE:** Parts of this study were conducted using the NIH's High Performance Computing system (https://hpc.nih.gov). The code in this notebook generates a swarm file that permits parallel pre-processing of all runs using that particular system. This code may need to be modified for your particular computational environment.
@@ -69,27 +70,18 @@ from utils.variables import DATA_DIR, ATLAS_DIR, ATLAS_NAME
 from utils.basics import get_7t_subjects
 
 # ***
-# # 1. Create Group Results Folder
-
-group_folder_path = osp.join(DATA_DIR,'ALL')
-if not osp.exists(group_folder_path):
-    os.mkdir(group_folder_path)
-    print("++ INFO: Group Folder [%s] created" % group_folder_path)
-else:
-    print("++ WARNING: Group Folder [%s] already exists. You may want to check its content to avoid overwriting pre-existing files" % group_folder_path)
-
-# ***
-# # 2. Create Reference Grid File
+# ## 1. Create Reference Grid File
 #
 # All minimally-preprocessed resting-state scans are already in the same space and grid. Therefore, any run from any subject can serve to create a file to be used as a reference (or master) grid in spatial normalization operations. ?Here we decided to use the first run from subject 100610.
 
+# %%time
 command = 'module load afni; \
            3dcalc -overwrite -a {data_dir}/100610/rfMRI_REST1_PA/rfMRI_REST1_PA_mPP.nii.gz[0] -expr "a" -prefix {data_dir}/ALL/mPP_Grid.nii.gz'.format(data_dir=DATA_DIR)
 output  = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
 print(output.strip().decode())
 
 # ***
-# # 3. Add Table Label to Schaefer Atlas File
+# ## 2. Add Table Label to Schaefer Atlas File
 
 command = 'module load afni; \
            cd {atlas_dir}; \
@@ -99,7 +91,7 @@ output  = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
 print(output.strip().decode())
 
 # ***
-# # 4. Create Swarm File
+# ## 3. Create Swarm File
 
 # Load list of available subjects
 # ===============================

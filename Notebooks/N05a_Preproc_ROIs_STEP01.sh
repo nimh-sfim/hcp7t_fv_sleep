@@ -112,37 +112,6 @@ echo "==========================================================================
 3dcalc      -overwrite -a ROI.WM_e2.mPP.nii.gz -b ROI.automask.nii.gz -expr 'a*b' -prefix ROI.WM_e2.mPP.nii.gz 
 3dcalc      -overwrite -a ROI.WM_e2.mPP.nii.gz -b ROI.Va_e.mPP.nii.gz -expr 'a+b' -prefix ROI.compcorr.mPP.nii.gz
 
-##JGC CORRECTION NOV 2nd 2021## # (8) Create resampled version of the Schaefer atlas into the FIX grid
-##JGC CORRECTION NOV 2nd 2021## # =====================================================================
-##JGC CORRECTION NOV 2nd 2021## echo "++ INFO: (8) Create resampled version of the Schaefer atlas into the FIX grid"
-##JGC CORRECTION NOV 2nd 2021## echo "============================================================================="
-##JGC CORRECTION NOV 2nd 2021## echo " +       3dresample -overwrite -inset ${ATLAS_PATH} -rmode NN -master  ${mPP_GRID} -prefix  Schaefer2018_200Parcels.mPP.nii.gz"
-##JGC CORRECTION NOV 2nd 2021## 3dresample -overwrite                \
-##JGC CORRECTION NOV 2nd 2021##            -inset ${ATLAS_PATH}      \
-##JGC CORRECTION NOV 2nd 2021##            -rmode NN                 \
-##JGC CORRECTION NOV 2nd 2021##            -master  ${mPP_GRID}      \
-##JGC CORRECTION NOV 2nd 2021##            -prefix  Schaefer2018_200Parcels.mPP.nii.gz
-
-##JGC CORRECTION NOV 2nd 2021## # (9) Set the table label and correct space in the subject specific atlas file
-##JGC CORRECTION NOV 2nd 2021## # ============================================================================
-##JGC CORRECTION NOV 2nd 2021## echo "++ INFO: (9) Set the table label and correct space in the subject specific atlas file"
-##JGC CORRECTION NOV 2nd 2021## echo "====================================================================================="
-##JGC CORRECTION NOV 2nd 2021## echo " +       3drefit -space MNI -labeltable ${ATLAS_DIR}/${ATLAS_NAME}/${ATLAS_NAME}_order.niml.lt Schaefer2018_200Parcels.mPP.nii.gz"
-##JGC CORRECTION NOV 2nd 2021## 3drefit -space MNI \
-##JGC CORRECTION NOV 2nd 2021##         -labeltable ${ATLAS_DIR}/${ATLAS_NAME}/${ATLAS_NAME}_order.niml.lt \
-##JGC CORRECTION NOV 2nd 2021##         Schaefer2018_200Parcels.mPP.nii.gz
-        
-##JGC CORRECTION NOV 2nd 2021## # (10) We then constrain the Atlas to the GM ribbon of each particular subject
-##JGC CORRECTION NOV 2nd 2021## # ===========================================================================
-##JGC CORRECTION NOV 2nd 2021## echo "++ INFO: (10) We then constrain the Atlas to the GM ribbon of each particular subject"
-##JGC CORRECTION NOV 2nd 2021## echo "====================================================================================="
-##JGC CORRECTION NOV 2nd 2021## echo " +       3dcalc     -overwrite -a Schaefer2018_200Parcels.mPP.nii.gz -b ROI.GM.mPP.nii.gz -expr 'a*b' -prefix Schaefer2018_200Parcels.mPP.nii.gz"
-##JGC CORRECTION NOV 2nd 2021## 3dcalc     -overwrite                                   \
-##JGC CORRECTION NOV 2nd 2021##            -a Schaefer2018_200Parcels.mPP.nii.gz \
-##JGC CORRECTION NOV 2nd 2021##            -b ROI.GM.mPP.nii.gz                         \
-##JGC CORRECTION NOV 2nd 2021##            -expr 'a*b'                                  \
-##JGC CORRECTION NOV 2nd 2021##            -prefix Schaefer2018_200Parcels.mPP.nii.gz 
-
 echo "=================================="
 echo "++ INFO: Script finished correctly"
 echo "=================================="
