@@ -182,67 +182,7 @@ FIGURE1.save('./figures/Figure01_ScanGroups.png')
 # ![](./figures/Figure01_ScanGroups.png)
 
 # ***
-# ## 5. Create a series of averages across EPI images
-#
-# These may be used as underlays in some of the final figures
-
-# +
-out_path_orig_drowsy_mean = osp.join(DATA_DIR,'ALL','Drowsy_orig_T2mean.nii.gz')
-out_path_orig_awake_mean  = osp.join(DATA_DIR,'ALL','Awake_orig_T2mean.nii.gz')
-out_path_orig_all_mean    = osp.join(DATA_DIR,'ALL','Drowsy_Awake_orig_T2mean.nii.gz')
-
-out_path_mpp_drowsy_mean = osp.join(DATA_DIR,'ALL','Drowsy_mPP_T2mean.nii.gz')
-out_path_mpp_awake_mean  = osp.join(DATA_DIR,'ALL','Awake_mPP_T2mean.nii.gz')
-out_path_mpp_all_mean    = osp.join(DATA_DIR,'ALL','Drowsy_Awake_mPP_T2mean.nii.gz')
-
-# +
-awake_orig_files  = [osp.join(DATA_DIR,scan.split('_',1)[0],scan.split('_',1)[1],scan.split('_',1)[1]+'_orig.nii.gz')+'[0]' for scan in Run_Lists['Awake']]
-drowsy_orig_files = [osp.join(DATA_DIR,scan.split('_',1)[0],scan.split('_',1)[1],scan.split('_',1)[1]+'_orig.nii.gz')+'[0]' for scan in Run_Lists['Drowsy']]
-
-awake_mpp_files  = [osp.join(DATA_DIR,scan.split('_',1)[0],scan.split('_',1)[1],scan.split('_',1)[1]+'_mPP.nii.gz')+'[0]' for scan in Run_Lists['Awake']]
-drowsy_mpp_files = [osp.join(DATA_DIR,scan.split('_',1)[0],scan.split('_',1)[1],scan.split('_',1)[1]+'_mPP.nii.gz')+'[0]' for scan in Run_Lists['Drowsy']]
-
-# +
-command_file = open('./N03a_Create_Orig_fMRI_AverageFile.sh','w+')
-command_file.write('module load afni\n')
-# Average of all 404 runs in orig space
-command_file.write('# ORIG SPACE - Average of all 404 runs\n')
-command = '3dMean -overwrite -prefix {out_path_orig_all_mean} {awake_orig_paths} {drowsy_orig_paths}'.format(out_path_orig_all_mean=out_path_orig_all_mean, 
-                                                                                                             awake_orig_paths = ' '.join(awake_orig_files),
-                                                                                                             drowsy_orig_paths = ' '.join(drowsy_orig_files),)
-command_file.write(command+'\n')
-# Average of drowsy runs in orig space
-command_file.write('# ORIG SPACE - Average of all 194 Drowsy runs\n')
-command = '3dMean -overwrite -prefix {out_path_orig_drowsy_mean} {drowsy_orig_paths}'.format(out_path_orig_drowsy_mean=out_path_orig_drowsy_mean, 
-                                                                                             drowsy_orig_paths = ' '.join(drowsy_orig_files),)
-command_file.write(command+'\n')
-# Average of awake runs in orig space
-command_file.write('# ORIG SPACE - Average of all 210 Awake runs\n')
-command = '3dMean -overwrite -prefix {out_path_orig_awake_mean} {awake_orig_paths}'.format(out_path_orig_awake_mean=out_path_orig_awake_mean, 
-                                                                                           awake_orig_paths = ' '.join(awake_orig_files),)
-command_file.write(command+'\n')
-
-# Average of all 404 runs in mPP space
-command_file.write('# MNI SPACE - Average of all 404 runs\n')
-command = '3dMean -overwrite -prefix {out_path_mpp_all_mean} {awake_mpp_paths} {drowsy_mpp_paths}'.format(out_path_mpp_all_mean=out_path_mpp_all_mean, 
-                                                                                                             awake_mpp_paths = ' '.join(awake_mpp_files),
-                                                                                                             drowsy_mpp_paths = ' '.join(drowsy_mpp_files),)
-command_file.write(command+'\n')
-# Average of drowsy runs in mPP space
-command_file.write('# MNI SPACE - Average of all 194 Drowsy runs\n')
-command = '3dMean -overwrite -prefix {out_path_mpp_drowsy_mean} {drowsy_mpp_paths}'.format(out_path_mpp_drowsy_mean=out_path_mpp_drowsy_mean, 
-                                                                                             drowsy_mpp_paths = ' '.join(drowsy_mpp_files),)
-command_file.write(command+'\n')
-# Average of awake runs in mPP space
-command_file.write('# MNI SPACE - Average of all 210 Awake runs\n')
-command = '3dMean -overwrite -prefix {out_path_mpp_awake_mean} {awake_mpp_paths}'.format(out_path_mpp_awake_mean=out_path_mpp_awake_mean, 
-                                                                                           awake_mpp_paths = ' '.join(awake_mpp_files),)
-command_file.write(command+'\n')
-command_file.close()
-# -
-
-# ***
-# ## 6. Explore significan differences in motion across scan types
+# ## 5. Explore significan differences in motion across scan types
 
 # Check for significant difference in Mean FD across run types using T-test
 
@@ -253,7 +193,7 @@ ttest_ind(mean_fd[mean_fd['Scan Type']=='Awake']['Mean_FD'],mean_fd[mean_fd['Sca
 mannwhitneyu(mean_fd[mean_fd['Scan Type']=='Awake']['Mean_FD'],mean_fd[mean_fd['Scan Type']=='Drowsy']['Mean_FD'], alternative='two-sided')
 
 # ***
-# # 7. Create Figure 5
+# ## 6. Create Figure 6
 #
 # Although we expect subjects to close their eyes at different times, previous research suggests that we should still see a trend in which as scanning progresses, a larger number of subjects will have their eyes closed at a given TR. This is the result of more, and more subjects falling sleep as scanning progresses.
 #
@@ -292,7 +232,7 @@ print('++ INFO: Correlation between scan time & subjects with eyes closed: R = %
 FIGURE4
 
 # ***
-# # 5. Identify individual periods of EO and EC
+# ## 7. Identify individual periods of EO and EC
 #
 # First, we create a dictionary with two empty dataframes (one for EC segments, one for EO segments). 
 #
@@ -382,7 +322,9 @@ Scan_Segments['EC'].to_pickle(osp.join(Resources_Dir,'EC_Segments_Info.pkl'))
 Scan_Segments['EO'].to_pickle(osp.join(Resources_Dir,'EO_Segments_Info.pkl'))
 
 # ***
+# ***
 # # END OF NOTEBOOK
+# ***
 # ***
 #
 # ## A. Additional Visualizations not included in manuscript
@@ -465,5 +407,65 @@ EXTRA_FIGURE3.save('./images/extramaterials03_EOdistribution.png')
 # Equivalent depiction for EO semgents.
 #
 # ![](./images/extramaterials03_EOdistribution.png)
+
+# + [markdown] tags=[]
+# ## B. Create a series of averages across EPI images
+#
+# These may be used as underlays in some of the final figures
+
+# +
+out_path_orig_drowsy_mean = osp.join(DATA_DIR,'ALL','Drowsy_orig_T2mean.nii.gz')
+out_path_orig_awake_mean  = osp.join(DATA_DIR,'ALL','Awake_orig_T2mean.nii.gz')
+out_path_orig_all_mean    = osp.join(DATA_DIR,'ALL','Drowsy_Awake_orig_T2mean.nii.gz')
+
+out_path_mpp_drowsy_mean = osp.join(DATA_DIR,'ALL','Drowsy_mPP_T2mean.nii.gz')
+out_path_mpp_awake_mean  = osp.join(DATA_DIR,'ALL','Awake_mPP_T2mean.nii.gz')
+out_path_mpp_all_mean    = osp.join(DATA_DIR,'ALL','Drowsy_Awake_mPP_T2mean.nii.gz')
+
+# +
+awake_orig_files  = [osp.join(DATA_DIR,scan.split('_',1)[0],scan.split('_',1)[1],scan.split('_',1)[1]+'_orig.nii.gz')+'[0]' for scan in Run_Lists['Awake']]
+drowsy_orig_files = [osp.join(DATA_DIR,scan.split('_',1)[0],scan.split('_',1)[1],scan.split('_',1)[1]+'_orig.nii.gz')+'[0]' for scan in Run_Lists['Drowsy']]
+
+awake_mpp_files  = [osp.join(DATA_DIR,scan.split('_',1)[0],scan.split('_',1)[1],scan.split('_',1)[1]+'_mPP.nii.gz')+'[0]' for scan in Run_Lists['Awake']]
+drowsy_mpp_files = [osp.join(DATA_DIR,scan.split('_',1)[0],scan.split('_',1)[1],scan.split('_',1)[1]+'_mPP.nii.gz')+'[0]' for scan in Run_Lists['Drowsy']]
+
+# +
+command_file = open('./N03a_Create_Orig_fMRI_AverageFile.sh','w+')
+command_file.write('module load afni\n')
+# Average of all 404 runs in orig space
+command_file.write('# ORIG SPACE - Average of all 404 runs\n')
+command = '3dMean -overwrite -prefix {out_path_orig_all_mean} {awake_orig_paths} {drowsy_orig_paths}'.format(out_path_orig_all_mean=out_path_orig_all_mean, 
+                                                                                                             awake_orig_paths = ' '.join(awake_orig_files),
+                                                                                                             drowsy_orig_paths = ' '.join(drowsy_orig_files),)
+command_file.write(command+'\n')
+# Average of drowsy runs in orig space
+command_file.write('# ORIG SPACE - Average of all 194 Drowsy runs\n')
+command = '3dMean -overwrite -prefix {out_path_orig_drowsy_mean} {drowsy_orig_paths}'.format(out_path_orig_drowsy_mean=out_path_orig_drowsy_mean, 
+                                                                                             drowsy_orig_paths = ' '.join(drowsy_orig_files),)
+command_file.write(command+'\n')
+# Average of awake runs in orig space
+command_file.write('# ORIG SPACE - Average of all 210 Awake runs\n')
+command = '3dMean -overwrite -prefix {out_path_orig_awake_mean} {awake_orig_paths}'.format(out_path_orig_awake_mean=out_path_orig_awake_mean, 
+                                                                                           awake_orig_paths = ' '.join(awake_orig_files),)
+command_file.write(command+'\n')
+
+# Average of all 404 runs in mPP space
+command_file.write('# MNI SPACE - Average of all 404 runs\n')
+command = '3dMean -overwrite -prefix {out_path_mpp_all_mean} {awake_mpp_paths} {drowsy_mpp_paths}'.format(out_path_mpp_all_mean=out_path_mpp_all_mean, 
+                                                                                                             awake_mpp_paths = ' '.join(awake_mpp_files),
+                                                                                                             drowsy_mpp_paths = ' '.join(drowsy_mpp_files),)
+command_file.write(command+'\n')
+# Average of drowsy runs in mPP space
+command_file.write('# MNI SPACE - Average of all 194 Drowsy runs\n')
+command = '3dMean -overwrite -prefix {out_path_mpp_drowsy_mean} {drowsy_mpp_paths}'.format(out_path_mpp_drowsy_mean=out_path_mpp_drowsy_mean, 
+                                                                                             drowsy_mpp_paths = ' '.join(drowsy_mpp_files),)
+command_file.write(command+'\n')
+# Average of awake runs in mPP space
+command_file.write('# MNI SPACE - Average of all 210 Awake runs\n')
+command = '3dMean -overwrite -prefix {out_path_mpp_awake_mean} {awake_mpp_paths}'.format(out_path_mpp_awake_mean=out_path_mpp_awake_mean, 
+                                                                                           awake_mpp_paths = ' '.join(awake_mpp_files),)
+command_file.write(command+'\n')
+command_file.close()
+# -
 
 
