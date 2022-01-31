@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.9.1
+#       jupytext_version: 1.12.0
 #   kernelspec:
 #     display_name: Non Brain Signals (pyxnat)
 #     language: python
@@ -44,6 +44,7 @@
 # In addition, for each existing resting-state run the following extra files are downloaded and placed in the appropriate run folder (e.g., rfMRI_REST1_PA):
 #
 # * Attempts to **download the minimally pre-processed data** for this run (e.g., rfMRI_REST1_PA_mPP.nii.gz).
+# * Attempts to **download the raw / unpreprocessed data** for this run (e.g., rfMRI_REST_PA_orig.nii.gz).
 # * Attempts to **download the EPI reference scan** for this run (e.g., rfMRI_REST1_PA_SBRef.nii.gz).
 # * Attempts to **download the motion parameters** for this run (e.g., rfMRI_REST1_PA_Movement_Regressors.txt).
 # * Attempts to **download the first derivative of the motion parameters** for this run (e.g., rfMRI_REST1_PA_Movement_Regressors_dt.txt).
