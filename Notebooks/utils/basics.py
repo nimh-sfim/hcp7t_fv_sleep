@@ -3,6 +3,86 @@ import pandas as pd
 import numpy  as np
 import os.path as osp
 
+# Compute aliased frequency given the original frequency and the sampling frequency
+# =================================================================================
+def aliased_freq(fs,f):
+    n  = round(f / fs) # Closer integer multiple of fs to f
+    fa = abs(fs*n - f)
+    return fa
+   
+# Frequency Analysis Functions
+# ============================
+def generate_sleep_psd(f,t,Sxx,SleepBand_BotFreq=0.03,SleepBand_TopFreq=0.07):
+    # Put Spectrogram into pandas dataframe (tidy-data form)
+    df = pd.DataFrame(Sxx.T, columns=f, index=t)
+    df = pd.DataFrame(df.stack()).reset_index()
+    df.columns=['TR','Freq','PSD']
+
+    # Extract average timeseries of power at different bands
+    sleep_band_power     = df[(df['Freq'] < SleepBand_TopFreq) & (df['Freq'] > SleepBand_BotFreq)].groupby('TR').mean()['PSD'].values
+    non_sleep_band_power = df[(df['Freq'] > SleepBand_TopFreq) | (df['Freq'] < SleepBand_BotFreq)].groupby('TR').mean()['PSD'].values
+    control_band_power   = df[(df['Freq'] > 0.1)               & (df['Freq'] < 0.2)].groupby('TR').mean()['PSD'].values
+    total_power          = df.groupby('TR').mean()['PSD'].values
+
+    # Create output dataframe, which will contain both the average power traces computed above,
+    # as well as the ratio of power in sleep band to all other "control" conditions
+    df3                   = pd.DataFrame(columns=['sleep','non_sleep','total','control','ratio_w_total','ratio_w_non_sleep','ratio_w_control'])
+    df3['sleep']          = sleep_band_power
+    df3['non_sleep']      = non_sleep_band_power
+    df3['total']          = total_power
+    df3['control']        = control_band_power
+
+    df3['ratio_w_total']     = sleep_band_power/total_power
+    df3['ratio_w_non_sleep'] = sleep_band_power/non_sleep_band_power
+    df3['ratio_w_control']   = sleep_band_power/control_band_power
+    # Set the time index for the output dataframe
+    df3.index = t
+    return df3
+  
+# Indexing related functions
+# ==========================
+def get_time_index(nacqs,tr):
+    """
+    Creates a pandas timedelta index for data that has one entry per TR
+    
+    INPUTS:
+    
+    nacqs: number of volumetric acquisitions
+    tr:    repetition time (in seconds)
+    
+    OUPUTS:
+    time_index: a TimedeltaIndex object with the timing for each TR/acquisition
+    """
+    time_index         = pd.timedelta_range(start='0 s', periods=nacqs, freq='{tr}s'.format(tr=tr))
+    return time_index
+
+def get_window_index(nacqs,tr,win_dur):
+    """
+    Creates a pandas timedelta index for data that has one entry per window. It assumes a window step
+    of 1 repetition time.
+    
+    INPUTS:
+    
+    nacqs: number of volumetric acquistions
+    tr:    repetition time (in seconds)
+    win_dur: window_duration (in seconds)
+    
+    OUTPUTS:
+    
+    window_index: a TimedeltaIndex object with the timing for each window
+    """
+    # First we generate a regular time index (the one that corresponds to the fMRI TR)
+    time_index         = pd.timedelta_range(start='0 s', periods=nacqs, freq='{tr}s'.format(tr=tr))
+    # Create empty dataframe with index having time_delta in steps of seconds
+    aux = pd.DataFrame(np.ones(nacqs),index=time_index)
+    # Simulate rolling windows of spectrogram_windur to gather which index should have data
+    aux               = aux.rolling(window=win_dur, center=True).mean()
+    aux               = aux.dropna()
+    window_time_index = aux.index
+    return window_time_index
+   
+# Functions to get list of subjects and runs
+# ==========================================
 def get_7t_subjects():
   """
   This function will load a list of subjects that have at least one rest run on the 7T scanner
@@ -50,6 +130,42 @@ def get_available_runs(when='post_download', type='all'):
             out_list = drowsy_list
     return out_list
 
+# Functions to load data
+# ======================
+def load_segments(kind,runs=None,min_dur=None):
+    """
+    Load information about scan segments according to ET data
+    
+    INPUTS
+    runs: list of scans ID to include
+    kind: type of target segments (EC=eyes closed, EO=eyes open)
+    min_dur: remove any segment with duration less than this threshold (in seconds)
+    
+    OUTPUTS
+    df: dataframe with one row per segment of interest. For each segment it will include the runID,
+        segment type, segment index, segment UUID, segment onset (secodns), segment offset (seconds), 
+        segment duration (seconds) and scan label.
+    """
+    if kind == 'all':
+       path_EC = osp.join(Resources_Dir,'EC_Segments_Info.pkl')
+       path_EO = osp.join(Resources_Dir,'EO_Segments_Info.pkl')
+       df_EC   = pd.read_pickle(path_EC)
+       df_EO   = pd.read_pickle(path_EO)
+       df      = pd.concat([df_EO, df_EC], axis=0).reset_index(drop=True)
+    else:
+       path = osp.join(Resources_Dir,'{k}_Segments_Info.pkl'.format(k=kind))
+       df   = pd.read_pickle(path)
+    
+    if min_dur is not None:
+        df=df[df['Duration']>min_dur] # JAVIER: may want to change to >=min_dur lateer #
+      
+    if runs is not None:
+       df=df[df['Run'].isin(runs)]
+    
+    print('++ INFO: segment_df has shape: %s' % str(df.shape))
+    
+    return df
+   
 def load_motion_info(sbjs, verbose=False, fillnan=True, write_FD=False):
   """
   Load motion information for all subjects in provided list into a dataframe. In addition,
@@ -97,6 +213,119 @@ def load_motion_info(sbjs, verbose=False, fillnan=True, write_FD=False):
   mot_df['index'] = mot_df.index
   print('++ Final Shape = %s' % str(mot_df.shape))
   return mot_df
+
+def load_motion_FD(runs, nacqs=890, index=None):
+  """
+  Load timeseries of framewise displacement for a given list of runs. 
+  
+  INPUTS
+  
+  runs: list of runs
+  nacqs: number of volumes to return starting from the end (to account for discarded volumes)
+  index: optional index for the output dataframe
+  
+  OUTPUTS
+  
+  DF: dataframe with one column per run.
+  """
+  if index is not None:
+      DF = pd.DataFrame(index=index, columns=runs)
+  else:
+      DF = pd.DataFrame(columns=runs)
+  
+  for sbj_run in runs:
+      sbj,run = sbj_run.split('_',1)
+      path    = osp.join(DATA_DIR,str(sbj),run,'{run}_Movement_FD.txt'.format(run=run))
+      aux     = pd.read_csv(path,sep='\t', index_col=0)
+      DF.loc[:,sbj_run] = aux['FD'].values[-nacqs:]
+
+  print('++ INFO: Shape of returned Dataframe is %s' % str(DF.shape))
+  return DF
+
+def load_motion_DVARS(runs, index=None):
+  """
+  Load timeseries of DVARs estimates for a given list of runs. 
+  
+  INPUTS
+  
+  runs: list of runs
+  nacqs: number of volumes to return starting from the end (to account for discarded volumes)
+  index: optional index for the output dataframe
+  
+  OUTPUTS
+  
+  DF: dataframe with one column per run.
+  """
+  if index is not None:
+      DF = pd.DataFrame(index=index, columns=runs)
+  else:
+      DF = pd.DataFrame(columns=runs)
+  
+  for sbj_run in runs:
+      sbj,run = sbj_run.split('_',1)
+      path    = osp.join(DATA_DIR,str(sbj),run,'{run}_Movement_SRMS.1D'.format(run=run))
+      aux     = np.loadtxt(path)
+      DF.loc[:,sbj_run] = aux
+
+  print('++ INFO: Shape of returned Dataframe is %s' % str(DF.shape))
+  return DF
+ 
+def load_fv_timeseries(runs,region,index=None):
+    """
+    Load representative timeseries for the 4th ventricle for a given list of scans and place them on a dataframe
+    
+    INPUTS
+    
+    runs: list of scans
+    region: ROI name (default = V4_grp)
+    index: index for the output dataframe. If none is provided, then the output object will have integer-based indexing.
+    
+    OUTPUT
+    
+    DF: dataframe with one row per acquistion (i.e., TR) and one column per run.
+    """
+    if index is not None:
+        DF = pd.DataFrame(index=index, columns=runs)
+    else:
+        DF = pd.DataFrame(columns=runs)
+    for sbj_run in runs:
+        sbj,run = sbj_run.split('_',1)
+        path    = osp.join(DATA_DIR,sbj,run,'{RUN}_mPP.Signal.{REGION}.1D'.format(RUN=run, REGION=region))
+        aux     = np.loadtxt(path)
+        DF.loc[:,sbj_run] = aux
+
+    print('++ INFO: Shape of returned Dataframe is %s' % str(DF.shape))
+    return DF
+   
+def load_PSD(runs, band='sleep', region='V4_grp',index=None):
+    """
+    Load PSD timeseries for a given list of runs and returns them on a pandas dataframe.
+    
+    INPUTS
+    
+    runs: list of scans
+    band: possible value are 'sleep', 'non_sleep', 'total', 'control', 'ratio_w_total','ratio_w_non_sleep', 'ratio_w_control'
+    region: ROI name (default = V4_grp)
+    index: index for the output dataframe. If none is provided, then the output object will have integer-based indexing.
+    
+    OUTPUT
+    
+    DF: dataframe with one row per windowed PSD estimate and one column per run.
+    """
+    if index is not None:
+        DF = pd.DataFrame(index=index, columns=runs)
+    else:
+        DF = pd.DataFrame(columns=runs)
+
+    for sbj_run in runs:
+        sbj,run = sbj_run.split('_',1)
+        file    = '{RUN}_mPP.Signal.{REGION}.Spectrogram_BandLimited.pkl'.format(RUN=run, REGION=region)
+        path    = osp.join(DATA_DIR,sbj,run,file)
+        aux     = pd.read_pickle(path)
+        DF.loc[:,sbj_run] = aux[band].values
+    DF = DF.infer_objects()
+    print('++ INFO: Shape of returned Dataframe is %s' % str(DF.shape))
+    return DF
 
 # FUNCTIONS USED FOR EYE TRACKING PRE-PROCESSING
 # ==============================================
