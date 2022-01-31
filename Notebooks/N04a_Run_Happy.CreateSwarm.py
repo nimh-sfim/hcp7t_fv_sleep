@@ -23,7 +23,7 @@ import subprocess
 import hvplot.pandas
 import holoviews as hv
 from utils.variables import Resources_Dir, DATA_DIR
-from utils.basics import get_available_runs, alised_freq
+from utils.basics import get_available_runs, aliased_freq
 
 # ***
 #
@@ -36,7 +36,7 @@ card_max_f = 80/60 # Common higher cardiac frequency
 n = 500
 hrs_df = pd.DataFrame(columns=['Heart Rate','Aliased Heart Rate'])
 for hr in np.linspace(start=card_min_f,stop=card_max_f,num=n):
-    hrs_df = hrs_df.append({'Heart Rate':hr, 'Aliased Heart Rate':alised_freq(fmri_fs,hr)}, ignore_index=True)
+    hrs_df = hrs_df.append({'Heart Rate':hr, 'Aliased Heart Rate':aliased_freq(fmri_fs,hr)}, ignore_index=True)
 
 hv.VLine(0.03).opts(line_color='k',line_dash='dashed', xlim=(-.1,2)) * \
 hv.VLine(0.07).opts(line_color='k',line_dash='dashed') * \
