@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.9.1
+#       jupytext_version: 1.12.0
 #   kernelspec:
 #     display_name: hcp7t_fv_sleep_env
 #     language: python
@@ -85,7 +85,8 @@ for item in Manuscript_Runs:
 # %%time
 for item in Manuscript_Runs:
     sbj,run = item.split('_',1)
-    for suffix in ['_mPP.blur.nii.gz','_mPP.blur.scale.nii.gz','_Movement_SRMS.1D','_BASIC.nii.gz','_BASICnobpf.nii.gz','_AFNI_COMPCOR.nii.gz','_AFNI_COMPCORp.nii.gz','_Behzadi_COMPCOR.nii.gz']:
+    #for suffix in ['_mPP.blur.nii.gz','_mPP.blur.scale.nii.gz','_Movement_SRMS.1D','_BASIC.nii.gz','_BASICnobpf.nii.gz','_AFNI_COMPCOR.nii.gz','_AFNI_COMPCORp.nii.gz','_Behzadi_COMPCOR.nii.gz']:
+    for suffix in ['_mPP.blur.nii.gz','_mPP.blur.scale.nii.gz','_Movement_SRMS.1D','_BASIC.nii.gz','_BASICnobpf.nii.gz','_Behzadi_COMPCOR.nii.gz']:
         path = osp.join(DATA_DIR,sbj,run,'{run}{suffix}'.format(run=run,suffix=suffix))
         if not osp.exists(path):
             print('++ WARNING: Missing output [%s]' % path)
