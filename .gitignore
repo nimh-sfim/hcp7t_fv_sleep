@@ -1,4 +1,6 @@
 Resources/
+.ipynb_checkpoints/
+Notebooks/.ipynb_checkpoints/
 Notebooks/N03e_PartialVolumeEffects.logs/
 Notebooks/N03c_Inflow_Profile_Analysis.logs/
 Notebooks/N04a_Preprocess_masks_and_ROIs.SWARM.sh
