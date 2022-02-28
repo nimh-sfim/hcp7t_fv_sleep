@@ -99,25 +99,25 @@ echo "++ INFO: (5) Generating bandpass filtering regressors"
 echo "++ =================================================="
 1dBport -nodata ${nt} ${tr} -band 0.01 0.1   -invert -nozero > ${RUN}_Bandpass_Regressors.txt
 
-echo "++ INFO: (7) Generating Behzadi-style CompCorr regressors"
+echo "++ INFO: (6) Generating Behzadi-style CompCorr regressors"
 echo "++ ======================================================"
-# (7) Generate CompCorr regressors (Behzadi Style)
+# (6) Generate CompCorr regressors (Behzadi Style)
 # ================================================
-# 7.1 We extract PCA from detrended dataset (to match later regression)
+# 6.1 We extract PCA from detrended dataset (to match later regression)
 3dTproject -overwrite \
             -mask ../ROI.FB.mPP.nii.gz \
             -polort ${POLORT} \
             -prefix rm.det_pcin_${RUN}.nii.gz \
             -input ${RUN}_mPP.nii.gz[${VOLS_DISCARD}..$]
 
-# 7.2 Extract PCA from detrended dataset (to match later regression)
+# 6.2 Extract PCA from detrended dataset (to match later regression)
 3dpc -overwrite                                        \
      -mask ../ROI.compcorr.mPP.nii.gz                      \
      -pcsave 5                                         \
      -prefix ${RUN}_mPP_Behzadi_CompCorr_Regressors \
      rm.det_pcin_${RUN}.nii.gz
 
-# 7.2 Remove redundant files
+# 6.3 Remove redundant files
 rm ${RUN}_mPP_Behzadi_CompCorr_Regressors+tlrc.????
 rm ${RUN}_mPP_Behzadi_CompCorr_Regressors0?.1D
 rm ${RUN}_mPP_Behzadi_CompCorr_Regressors_eig.1D
@@ -127,9 +127,9 @@ rm rm.det_pcin_${RUN}.nii.gz
 # ======================================================================================== #
 # ================ Run different pre-processing pipelines (post mPP) ===================== #
 # ======================================================================================== #
-# (8) Basic Pre-processing 
+# (7) Basic Pre-processing 
 # ========================
-echo "++ INFO: (8) Basic Pre-processing"
+echo "++ INFO: (7) Basic Pre-processing"
 echo "++ =============================="
 3dTproject -overwrite                                          \
            -mask   ../ROI.FB.mPP.nii.gz                        \
@@ -140,9 +140,9 @@ echo "++ =============================="
            -prefix ${RUN}_BASIC.nii.gz
 echo " + OUTPUT from Basic Pipeline: ${RUN}_BASIC.nii.gz"
 
-# (9) Basic Pre-processing - No Filtering
+# (8) Basic Pre-processing - No Filtering
 # =========================================
-echo "++ INFO: (9) Basic Pre-processing (no filtering - input to rapidtide)"
+echo "++ INFO: (8) Basic Pre-processing (no filtering - input to rapidtide)"
 echo "++ =================================================================="
 3dTproject -overwrite                                          \
            -mask   ../ROI.FB.mPP.nii.gz                        \
@@ -152,9 +152,9 @@ echo "++ =================================================================="
            -prefix ${RUN}_BASICnobpf.nii.gz
 echo " + OUTPUT from Basic Pipeline (no filtering): ${RUN}_BASICnobpf.nii.gz"
 
-# (11) Behzadi CompCor Pipeline
+# (9) Behzadi CompCor Pipeline
 # =============================
-echo "++ INFO: (11) Behzadi CompCorr Pre-processing"
+echo "++ INFO: (9) Behzadi CompCorr Pre-processing"
 echo "++ =========================================="
 3dTproject -overwrite                                           \
            -mask   ../ROI.FB.mPP.nii.gz                         \
