@@ -22,6 +22,7 @@
 # 3. Save scan-wise HR into to ```Resources/HR_scaninfo.csv```
 # 4. Check for statistical differences in HR across scan types (i.e., drowsy vs. awake)
 # 5. Check for statistical differences in aliased HR across scan types (i.e., drowsy vs. awake)
+# 6. Check for statistical differences in amplitude of cardiac traces across scan types and segment types
 #
 # ### Import Libraries
 
@@ -47,6 +48,8 @@ formatter = DatetimeTickFormatter(minutes = ['%Mmin:%Ssec'])
 # -
 
 # ### Load Scan Lists
+#
+# We will now load the list of scans that are used in the main part of the analyses. For each scan we also have their label: "drowsy" or "awake"
 
 Drowsy_scans = get_available_runs(when='final',type='drowsy')
 Awake_scans  = get_available_runs(when='final',type='awake')
@@ -56,6 +59,8 @@ print('++ INFO: Number of Drowsy scans: %d' % len(Drowsy_scans))
 print('++ INFO: Number of Awake scans:  %d' % len(Awake_scans))
 
 # ### Load HAPPY-estimated Cardiac Traces (25hz) into a Dataframe
+#
+# In a previous notebook, we estiamted cardiac traces for each resint-state scan using the "happy" software. We now load these into a pandas dataframe. The extracted traces have a sampling frequency of 25Hz. The resulting dataframe will have a time index based on this frquency. It will also have one column per scan containing the stimated cardiac traces
 
 # Create Time Delta Index
 cardiac_25hz_df_index = pd.timedelta_range(start='0 s', end='900 s', periods=((900*25)-1))
@@ -79,20 +84,28 @@ for scanID in All_scans:
     #Add to DF
     cardiac_25hz_df[scanID] = aux_data['cardiacfromfmri_dlfiltered_25.0Hz'].values
 
+cardiac_25hz_df.head()
+
 # ***
-# ## Scan-wise Analyses
+# # Scan-wise Analyses
+#
+# First, we will explore potential differences in cardiac function at the scan level (i.e. drowsy vs. awake scans). Later in the notebook we will conduct similar analyses at the segment level (EO vs. EC).
 #
 # #### Estimate Spectrogram for each Trace, extract average HR, and aliased freq
+#
+# 1. Compute the spectrogram of cardiac traces using the whole scan.
+# 2. Find the fundamental frequency (e.g., cardiac frequency)
+# 3. Compute its aliased equivalent based on the fMRI sampling frequency
+#
+# The next figure a few cells below exemplifies this process.
 
 fs_card = 25 # Hz (Frequency in standarized HAPPY outputs)
 fs_fmri = 1  # Hz (TR in fMRI data)
 
-cardiac_25hz_df[0:255]
-
 # +
 # %%time
 cardiac_welch_df = pd.DataFrame(columns=All_scans)
-cardiac_hr_df = pd.DataFrame(index=All_scans, columns=['HR','HR aliased','Scan Type'])
+cardiac_hr_df = pd.DataFrame(index=All_scans, columns=['HR','HR_aliased','Scan Type'])
 for scanID in All_scans:
     #wf, wc      = welch(cardiac_25hz_df[scanID], fs=fs_card, window=get_window(('tukey',0.25),256), noverlap=128, scaling='density', detrend='constant', nfft=1024)
     wf, wc      = welch(cardiac_25hz_df[scanID], fs=fs_card, window=get_window(('tukey',0.25),750), noverlap=375, scaling='density', detrend='constant', nfft=1024)
@@ -116,8 +129,8 @@ cardiac_welch_df.index.name = 'Frequency [Hz]'
 
 # #### Representative Figures with one scan (to explain method)
 
-sample_scan = All_scans[30]
-aux_sbj, aux_run = scanID.split('_',1)
+sample_scan = '995174_rfMRI_REST3_PA'
+aux_sbj, aux_run = sample_scan.split('_',1)
 # Load Cardiac Trace
 aux_data_path = osp.join(DATA_DIR, aux_sbj, aux_run, '{run}_orig.happy'.format(run=aux_run),'{run}_orig.happy_desc-stdrescardfromfmri_timeseries.tsv'.format(run=aux_run))
 aux_json_path = osp.join(DATA_DIR, aux_sbj, aux_run, '{run}_orig.happy'.format(run=aux_run),'{run}_orig.happy_desc-stdrescardfromfmri_timeseries.json'.format(run=aux_run))
@@ -138,21 +151,21 @@ hv.Text(8,4,'HR = {hr:.2f} Hz --> HR_aliased = {hra:.2f} Hz'.format(hr=cardiac_h
 #
 # #### Distribution of scan-level frequencies
 #
-# * Plot distributon of original HRs for all scans
+# **Cardiac Frequency Distribution**: Here is the distribution of estimated cardiac rates at the scan level. In red, we show what are normal ranges for resting cardiac rates (50bpm or 0.83 Hz <- -> 80bpm or 1.33 Hz). We can observe that with a few exception, estimated cardiac frequencies fall within tose normal ranges
 
 hv.Rectangles([(50/60,0,80/60,10)]).opts(alpha=0.5, color='r') * \
 cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.hist(y='HR', color='gray', bins=30, normed=True, title='(A) Distribution of Scan-Level Heart Rate',ylim=(0,5), xlim=(0,2)) * \
 cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.kde( y='HR', color='gray', xlabel='Heart Rate [Hz]', ylabel='Density', fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}).opts(toolbar=None)
 
-# * Plot distribution of aliased HRs for all scans
+# **Aliased Cardiac Frequency Distribution:** distribution of aliased cardiac frequencies. We can see that those overlap with the targeted range of frequencies of this study (in green).
 
-hv.Rectangles([(0.03,0,0.07,10)]).opts(alpha=0.5, color='r') * \
+hv.Rectangles([(0.03,0,0.07,10)]).opts(alpha=0.5, color='g') * \
 cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.hist(y='HR_aliased', color='gray', bins=30, normed=True, title='(B) Distribution of Scan-Level Aliased Heart Rate', ylim=(0,10), xlim=(-.1,.8)) * \
 cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.kde(y='HR_aliased', color='gray', xlabel='Aliased Heart Rate [Hz]', ylabel='Density', fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, xlim=(-.1,.8)).opts(toolbar=None)
 
 # * Plot group differences in aliased HR across scan types 
 
-cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.box(y='HR_aliased', by='Scan Type', title='(C) Aliased HR segregated by Scan Type',
+cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.box(y='HR_aliased', by='Scan Type', title='(C) Aliased HR segregated by Scan Type', hover_cols=['Scan ID'], tools=['hover'],
                                                                 fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, ylabel='Aliased HR [Hz]', color='Scan Type', cmap=['orange','lightblue'], legend=False).opts(toolbar=None)
 
 # * Test for statistical differences in aliased HR at the group level
@@ -220,7 +233,7 @@ hv.Rectangles([(50/60,0,80/60,10)]).opts(alpha=0.5, color='r') * \
 segments.reset_index(drop=True).infer_objects().hvplot.hist(y='HR', color='gray', bins=30, normed=True, title='(D) Distribution of Segment-Level Heart Rate',ylim=(0,5), xlim=(0,2)) * \
 segments.reset_index(drop=True).infer_objects().hvplot.kde( y='HR', color='gray', xlabel='Heart Rate [Hz]', ylabel='Density', fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}).opts(toolbar=None)
 
-hv.Rectangles([(0.03,0,0.07,10)]).opts(alpha=0.5, color='r') * \
+hv.Rectangles([(0.03,0,0.07,10)]).opts(alpha=0.5, color='g') * \
 segments.reset_index(drop=True).infer_objects().hvplot.hist(y='HR_aliased', color='gray', bins=30, normed=True, title='(E) Distribution of Segment-Level Aliased Heart Rate', ylim=(0,10), xlim=(-.1,.8)) * \
 segments.reset_index(drop=True).infer_objects().hvplot.kde(y='HR_aliased', color='gray', xlabel='Aliased Heart Rate [Hz]', ylabel='Density', fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, xlim=(-.1,.8)).opts(toolbar=None)
 
@@ -288,11 +301,8 @@ segments.reset_index(drop=True).infer_objects().hvplot.box(y='C_Amplitude', ylab
                                                            title='(H) Amplitude of Cardiac Signal by Segment Type',
                                                            fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, color='Segment Type', cmap=['orange','lightblue'], legend=False).opts(toolbar=None)
 
-segments.reset_index(drop=True).infer_objects().hvplot.kde(y='C_Amplitude', by='Segment Type', xlabel='Amplitude', 
-                                                          fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, color=['orange','lightblue']).opts(toolbar=None, legend_position='top_left')
-
-cardiac_amp_df.reset_index(drop=True).infer_objects().hvplot.kde(y='C_Amplitude', by='Scan Type', xlabel='Amplitude', 
-                                                          fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, color=['orange','lightblue']).opts(toolbar=None, legend_position='top_left')
+print('++ INFO: C_Amplitude for EO [mean +/- stdev] = %.2f +/- %.2f' % (segments.groupby(by='Segment Type').mean().loc['EO','C_Amplitude'],segments.groupby(by='Segment Type').std().loc['EO','C_Amplitude']))
+print('++ INFO: C_Amplitude for EC [mean +/- stdev] = %.2f +/- %.2f' % (segments.groupby(by='Segment Type').mean().loc['EC','C_Amplitude'],segments.groupby(by='Segment Type').std().loc['EC','C_Amplitude']))
 
 print('++ INFO: Statistical Tests for differences in HR across segment types')
 print('++ ==================================================================')
@@ -305,17 +315,14 @@ print('   T-Test                   [HR Amp EO different than EC] T    = %2.2f | 
 print('   Mann-Whitney U Rank Test [HR Amp EO different than EC] Stat = %2.2f | p=%0.5f' % (mw_s, mw_p))
 print('   Kruskas-Wallis H Test    [HR Amp EO different than EC] Stat = %2.2f | p=%0.5f' % (kk_s, kk_p))
 
-print("++ INFO: Average amplitude of cardiac signal in EO segments: %.2f" % eo_amps.mean())
-print("++ INFO: Average amplitude of cardiac signal in EC segments: %.2f" % ec_amps.mean())
+segments.reset_index(drop=True).infer_objects().hvplot.kde(y='C_Amplitude', by='Segment Type', xlabel='Amplitude', 
+                                                          fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, color=['orange','lightblue']).opts(toolbar=None, legend_position='top_left')
+
+cardiac_amp_df.reset_index(drop=True).infer_objects().hvplot.kde(y='C_Amplitude', by='Scan Type', xlabel='Amplitude', 
+                                                          fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, color=['orange','lightblue']).opts(toolbar=None, legend_position='top_left')
 
 # ***
 # ***
 # # END OF NOTEBOOK
 # ***
 # ***
-
-# + active=""
-# %matplotlib inline
-# fig, axs = plt.subplots(1,2,figsize=(20,5))
-# segments.boxplot('HR', by='Type', ax=axs[0], positions=[2,1])
-# segments.boxplot('Cardiac Amplitude', by='Type', ax=axs[1],positions=[2,1])
