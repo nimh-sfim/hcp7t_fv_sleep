@@ -78,6 +78,7 @@ roi_info['ROI ID']   = aux_roi_info.loc[mean_indexes].values
 roi_info['ROI ID']   = roi_info['ROI ID'].astype(int)
 roi_info['ROI Size'] = aux_roi_info.loc[nzvox_indexes].values
 
+# %matplotlib inline
 # Histogram of ROI Sizes
 # ======================
 fig = roi_info.plot.hist(y='ROI Size', bins=100)
@@ -162,6 +163,9 @@ aux[['R','A','S','Node Color','Node Size','Short ROI Name']].to_csv('/data/SFIMJ
 # @MakeLabelTable -lab_file  Schaefer2018_200Parcels_7Networks_order_mPP.GM_Ribbon_order.txt 1 0 \
 #                 -labeltable Schaefer2018_200Parcels_7Networks_order_mPP.GM_Ribbon.niml.lt\
 #                 -dset Schaefer2018_200Parcels_7Networks_order_mPP.GM_Ribbon.nii.gz
+#
+# # rm rm.Schaefer2018_200Parcels_7Networks_order_mPP.GM_Ribbon.info.txt
+# # rm rm.Schaefer2018_200Parcels_7Networks_order_mPP.GM_Ribbon.nii.gz
 # ```
 #
 # > **NOTE:** Be aware that the ROIs being eliminated are hardcoded in the 3dcalc command. If those need to be changed, you will need to change that command accordingly

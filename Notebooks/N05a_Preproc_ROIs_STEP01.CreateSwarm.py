@@ -136,5 +136,3 @@ for sbj in Sbjs:
         aux_path = osp.join(DATA_DIR,sbj,file)
         if not osp.exists(aux_path):
             print ('++ WARNING: Output missing [%s]' % aux_path)
-
-
