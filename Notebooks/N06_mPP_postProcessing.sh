@@ -10,11 +10,9 @@
 # 
 # (2) BASIC: blur (4mm), scaling, regression (motion + 1st der mot + legendre 5 + bpf 0.01 - 0.1 Hz)
 #
-# (3) AFNI COMPCOR: blur (4mm), scaling, regression (motion + 1st der mot + legendre 5 + PCAs lat vents + bpf 0.01 - 0.1Hz)
+# (3) BASIC: blur (4mm), scaling, regression (motion + 1st der mot + legendre 5) --> Only for rapidtide (so it does it's own filtering)
 #
-# (4) AFNI COMPCOR+: blur (4mm), scaling, regression (motion + 1st der mot + legendre 5 + PCAs lat vents + V4 signal + bpf 0.01 - 0.1Hz)
-#
-# (5) BEHZADI COMPCOR: blur (4mm), scaling, regression (motion + 1st der mot + legendre 5 + PCAs CSF & WM + bpf 0.01 - 0.1Hz).
+# (4) BEHZADI COMPCOR: blur (4mm), scaling, regression (motion + 1st der mot + legendre 5 + PCAs CSF & WM + bpf 0.01 - 0.1Hz).
 #
 # ===================================================================================================================================================
 
@@ -101,40 +99,18 @@ echo "++ INFO: (5) Generating bandpass filtering regressors"
 echo "++ =================================================="
 1dBport -nodata ${nt} ${tr} -band 0.01 0.1   -invert -nozero > ${RUN}_Bandpass_Regressors.txt
 
-# # (6) Generate CompCorr regressors (AFNI Style)
-# # =============================================
-# # In AFNI, Compcor is implemented as the top 3 PCA components present in the lateral ventricles
-# # We did this in the original submission, but one reviewer brough to our attention than conventional
-# # Compcorr uses 5 PCA components and is less restrictive in terms of tissue definition (CSF + WM).
-# # We keep these analyses so that we can compare the effects of both methods
-#
-# echo "++ INFO: (6) Generating AFNI-style CompCorr regressors"
-# echo "++ ==================================================="
-# # 6.1 We extract PCA from detrended dataset (to match later regression)
-# 3dTproject -overwrite \
-#            -mask ../ROI.FB.mPP.nii.gz \
-#            -polort ${POLORT} \
-#            -prefix rm.det_pcin_${RUN}.nii.gz \
-#            -input ${RUN}_mPP.nii.gz[${VOLS_DISCARD}..$]
-# 
-# # 6.2 Extract top 3 PCAs (those will be the regressors for CompCorr
-# 3dpc -overwrite \
-#      -mask ../ROI.Vl_e.mPP.nii.gz \
-#      -pcsave 3 \
-#      -prefix ${RUN}_mPP_AFNI_CompCorr_Regressors \
-#      rm.det_pcin_${RUN}.nii.gz
-# 
-# # 6.3 Remove redundant files
-# rm ${RUN}_mPP_AFNI_CompCorr_Regressors+tlrc.????
-# rm ${RUN}_mPP_AFNI_CompCorr_Regressors0?.1D
-# rm ${RUN}_mPP_AFNI_CompCorr_Regressors_eig.1D
-# echo " + OUPUT: AFNI CompCorr Regressors File ${RUN}_AFNI_CompCorr_Regressors_vec.1D"
-
 echo "++ INFO: (7) Generating Behzadi-style CompCorr regressors"
 echo "++ ======================================================"
 # (7) Generate CompCorr regressors (Behzadi Style)
 # ================================================
-# 7.1 Extract PCA from detrended dataset (to match later regression)
+# 7.1 We extract PCA from detrended dataset (to match later regression)
+3dTproject -overwrite \
+            -mask ../ROI.FB.mPP.nii.gz \
+            -polort ${POLORT} \
+            -prefix rm.det_pcin_${RUN}.nii.gz \
+            -input ${RUN}_mPP.nii.gz[${VOLS_DISCARD}..$]
+
+# 7.2 Extract PCA from detrended dataset (to match later regression)
 3dpc -overwrite                                        \
      -mask ../ROI.compcorr.mPP.nii.gz                      \
      -pcsave 5                                         \
@@ -176,20 +152,6 @@ echo "++ =================================================================="
            -prefix ${RUN}_BASICnobpf.nii.gz
 echo " + OUTPUT from Basic Pipeline (no filtering): ${RUN}_BASICnobpf.nii.gz"
 
-# # (10) AFNI CompCor Pipeline
-# # =========================
-# echo "++ INFO: (10) AFNI CompCorr Pre-processing"
-# echo "++ ======================================="
-# 3dTproject -overwrite                                           \
-#            -mask   ../ROI.FB.mPP.nii.gz                         \
-#            -input  ${RUN}_mPP.blur.scale.nii.gz                 \
-#            -polort ${POLORT}                                    \
-#            -ort    ${RUN}_Movement_Regressors_dt.discard10.txt  \
-#            -ort    ${RUN}_Bandpass_Regressors.txt               \
-#            -ort    ${RUN}_mPP_AFNI_CompCorr_Regressors_vec.1D        \
-#            -prefix ${RUN}_AFNI_COMPCOR.nii.gz
-# echo " + OUTPUT from AFNI CompCor: ${RUN}_AFNI_COMPCOR.nii.gz"
-
 # (11) Behzadi CompCor Pipeline
 # =============================
 echo "++ INFO: (11) Behzadi CompCorr Pre-processing"
@@ -203,21 +165,6 @@ echo "++ =========================================="
            -ort    ${RUN}_mPP_Behzadi_CompCorr_Regressors_vec.1D        \
            -prefix ${RUN}_Behzadi_COMPCOR.nii.gz
 echo " + OUTPUT from Behzadi CompCor: ${RUN}_Behzadi_COMPCOR.nii.gz"
-
-# # (12) AFNI CompCor+ (Most likelly to be deprecated during the reviews)
-# # ====================================================================
-# echo "++ INFO: (12) AFNI CompCorr+ Pre-processing"
-# echo "++ ========================================"
-# 3dTproject -overwrite                                          \
-#           -mask   ../ROI.FB.mPP.nii.gz                        \
-#           -input  ${RUN}_mPP.blur.scale.nii.gz                \
-#           -polort ${POLORT}                                   \
-#           -ort    ${RUN}_Movement_Regressors_dt.discard10.txt \
-#           -ort    ${RUN}_Bandpass_Regressors.txt              \
-#           -ort    ${RUN}_mPP_AFNI_CompCorr_Regressors_vec.1D  \
-#           -ort    ${RUN}_mPP.Signal.V4_grp.1D                 \
-#           -prefix ${RUN}_AFNI_COMPCORp.nii.gz
-# echo " + OUTPUT from AFNI CompCor+: ${RUN}_COMPCORp.nii.gz"
 
 echo "=================================="
 echo "++ INFO: Script finished correctly"
