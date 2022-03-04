@@ -70,7 +70,7 @@ if not osp.exists('./N07_RapidTide.logs'):
 
 # Create Swarm file for extracting representative power
 # ==========================================================
-os.system('echo "#swarm -f ./N07_RapidTide.SWARM.sh -g 128 -t 32 --partition quick,norm --logdir ./N07_RapidTide.logs" > ./N07_RapidTide.SWARM.sh')
+os.system('echo "#swarm -f ./N07_RapidTide.SWARM.sh -g 64 -t 32 --partition quick,norm --logdir ./N07_RapidTide.logs" > ./N07_RapidTide.SWARM.sh')
 for sbj_run in Manuscript_Runs:
     sbj,run  = sbj_run.split('_',1)
     os.system('echo "export SBJ={sbj} RUN={run}; sh ./N07_RapidTide.sh" >> ./N07_RapidTide.SWARM.sh'.format(sbj=sbj, run=run, ddir=DATA_DIR))
@@ -295,7 +295,7 @@ print('++ INFO: Output file: ALL.rapidtide_BASICnobpf_p_lt_{pval}.corrout_summar
 lag_path = '/data/SFIMJGC_HCP7T/HCP7T/ALL/ALL.rapidtide_BASICnobpf_p_lt_0p050.corrout_summary.nzmean.GMRibbon.1D'
 lag_GM = pd.read_csv(lag_path, header=None)
 lag_GM.index = np.arange(-15,16)
-lag_GM.hvplot(ylabel='Cross Correlation',xlabel='Lag(s)', title='FV vs. GM Ribbon Correlation during Eyes Closed', ylim=(-0.4,0.4), width=500, height=500, label='blt').opts(show_grid=True)
+lag_GM.hvplot(ylabel='Cross Correlation',xlabel='Lag(s)', title='iFV vs. GM Ribbon Correlation during Eyes Closed', ylim=(-0.4,0.4), width=500, height=500, label='blt').opts(show_grid=True)
 
 # ***
 #
@@ -357,15 +357,15 @@ lagmap_path       = osp.join(ALL_DIR,'Figure8_LagMaps.nii.gz')
 lagmap_img        = load_img(lagmap_path)
 
 fig, axs = plt.subplots(2,1,figsize=(20,7))
-fig8_panelAsag = plot_stat_map(lagmap_img,t1_bg,cmap='jet', vmax=8, display_mode='x', axes=axs[0], cut_coords=[-53,-35,-18,0,18,35,53])
-fig8_panelAaxi = plot_stat_map(lagmap_img,t1_bg,cmap='jet', vmax=8, display_mode='z', axes=axs[1], cut_coords=[-45,-32,-19,-7,6,19,31,44,56,68])
+fig8_panelAsag = plot_stat_map(lagmap_img,t1_bg,cmap='jet', vmax=8, display_mode='x', axes=axs[1], cut_coords=[-53,-35,-18,0,18,35,53])
+fig8_panelAaxi = plot_stat_map(lagmap_img,t1_bg,cmap='jet', vmax=8, display_mode='z', axes=axs[0], cut_coords=[-45,-32,-19,-7,6,19,31,44,56,68])
+fig.suptitle('(A) Temporal Lag Maps', fontsize=20, fontweight='bold')
+plt.close()
 
-fig8 = pn.Column(pn.pane.Matplotlib(fig),pn.pane.HoloViews(fig8_panelsBC))
+fig8 = pn.Column(pn.pane.Matplotlib(fig),pn.pane.Markdown('# (B) Whole Brain      (C) Voxel-wise cross-correlations for representative locations indicated above'),pn.pane.HoloViews(fig8_panelsBC))
 
 fig8.save('./figures/Fig08_RapidTide_results.png')
 
-# Equivalent depiction for EO semgents.
-#
 # ![](./figures/Fig08_RapidTide_results.png)
 
 
