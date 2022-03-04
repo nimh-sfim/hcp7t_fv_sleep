@@ -31,7 +31,10 @@ from nilearn.plotting import plot_stat_map, plot_epi
 import hvplot.pandas
 import panel as pn
 import matplotlib.pyplot as plt
+import holoviews as hv
 # %matplotlib inline
+
+fontsize_opts={'xlabel':14,'ylabel':14,'xticks':12,'yticks':12,'legend':12,'legend_title':12,'title':16}
 # -
 
 # ***
@@ -89,6 +92,7 @@ print('++ INFO: Number of Runs [Awake]  = %d' % len(awake_scans))
 
 # **Generate group-level (average) PRV maps for all regression schemes**
 
+# %%time
 for scenario in ['BASIC','BASICpp','COMPCOR','COMPCORpp']:
     command       = 'module load afni; 3dMean -overwrite -prefix {DATA_DIR}/ALL/DROWSY_PVR_{scenario}.nii.gz '.format(DATA_DIR=DATA_DIR, scenario=scenario) + \
                     ' '.join(['/data/SFIMJGC_HCP7T/HCP7T/{sbj}/{run}/{run}_PVR.{scenario}.nii.gz'.format(scenario=scenario, sbj=item.split('_',1)[0],run=item.split('_',1)[1]) for item in drowsy_scans])
@@ -107,7 +111,7 @@ for scenario in ['BASIC','BASICpp','COMPCOR','COMPCORpp']:
 
 # **Create Histogram with distributions**
 
-hist_plots = df.hvplot.kde(title='(E) % Variance Removed (PVR) in GM Ribbon - Drowsy Scans', fontsize={'xlabel':14,'ylabel':14,'xticks':12,'yticks':12,'legend':12,'legend_title':12,'title':16}, xlabel='% Variance Removed (PVR)').opts(legend_position='right', toolbar=None)
+hist_plots = df.hvplot.kde(title='(E) % Variance Removed (PVR) in GM Ribbon - Drowsy Scans', fontsize=fontsize_opts, xlabel='% Variance Removed (PVR)').opts(legend_position='right', toolbar=None)
 
 # **Plot Voxel-wise Maps**
 
@@ -153,10 +157,27 @@ command_file.close()
 # **Plot group-level maps**
 
 fig, axs = plt.subplots(2,2,figsize=(14,5))
-fig.suptitle('Voxel-wise correlation of data after different regression schemes relative to bandpass + polort only', fontsize=16, ha='center')
+fig.suptitle('Voxel-wise correlation of data after different regression schemes relative to bandpass + polort only', fontsize=16, ha='center', fontweight='bold')
 map_1    = plot_epi(osp.join(DATA_DIR,'ALL','DROWSY_corr_BASIC_2_Reference.nii.gz'),     cmap='jet', vmin=0.6, vmax=1, axes=axs[0,0], title='Motion')
 map_2    = plot_epi(osp.join(DATA_DIR,'ALL','DROWSY_corr_BASICpp_2_Reference.nii.gz'),   cmap='jet', vmin=0.6, vmax=1, axes=axs[0,1], title='Motion + Lagged iFV')
 map_3    = plot_epi(osp.join(DATA_DIR,'ALL','DROWSY_corr_COMPCOR_2_Reference.nii.gz'),   cmap='jet', vmin=0.6, vmax=1, axes=axs[1,0], title='Motion + CompCor')
 map_4    = plot_epi(osp.join(DATA_DIR,'ALL','DROWSY_corr_COMPCORpp_2_Reference.nii.gz'), cmap='jet', vmin=0.6, vmax=1, axes=axs[1,1], title='Motion + CompCor + Lagged iFV')
+plt.close()
 
+# **Distribution of time-series correlation across regression schemes**
 
+df = pd.DataFrame(columns=['Basic_2_Reference','Basic+_2_Reference','CompCor_2_Reference','CompCor+_2_Reference'])
+df['Basic_2_Reference']   = apply_mask('/data/SFIMJGC_HCP7T/HCP7T/ALL/DROWSY_corr_BASIC_2_Reference.nii.gz','/data/SFIMJGC_HCP7T/HCP7T/ALL/ALL_EPI_FBmask.er2.nii.gz')
+df['Basic+_2_Reference']  = apply_mask('/data/SFIMJGC_HCP7T/HCP7T/ALL/DROWSY_corr_BASICpp_2_Reference.nii.gz','/data/SFIMJGC_HCP7T/HCP7T/ALL/ALL_EPI_FBmask.er2.nii.gz')
+df['CompCor_2_Reference'] = apply_mask('/data/SFIMJGC_HCP7T/HCP7T/ALL/DROWSY_corr_COMPCOR_2_Reference.nii.gz','/data/SFIMJGC_HCP7T/HCP7T/ALL/ALL_EPI_FBmask.er2.nii.gz')
+df['CompCor+_2_Reference'] = apply_mask('/data/SFIMJGC_HCP7T/HCP7T/ALL/DROWSY_corr_COMPCORpp_2_Reference.nii.gz','/data/SFIMJGC_HCP7T/HCP7T/ALL/ALL_EPI_FBmask.er2.nii.gz')
+
+hist_plots = ((df.hvplot.scatter(x='Basic_2_Reference',y='Basic+_2_Reference',   xlabel='R(BASIC,Reference)', ylabel='R(BASIC+,Reference)', datashade=True, aspect='square', fontsize=fontsize_opts) * hv.Curve([[0, 0], [1, 1]]).opts(line_dash='dashed', color='black')) + \
+(df.hvplot.scatter(x='Basic_2_Reference',y='CompCor_2_Reference',  xlabel='R(BASIC,Reference)', ylabel='R(CompCor,Reference)', datashade=True, aspect='square', fontsize=fontsize_opts) * hv.Curve([[0, 0], [1, 1]]).opts(line_dash='dashed', color='black')) + \
+(df.hvplot.scatter(x='Basic_2_Reference',y='CompCor+_2_Reference', xlabel='R(BASIC,Reference)', ylabel='R(CompCor+,Reference)', datashade=True, aspect='square', fontsize=fontsize_opts) * hv.Curve([[0, 0], [1, 1]]).opts(line_dash='dashed', color='black'))).opts(toolbar=None, title='Relation to non-regression model decreases when we take into account lagged iFV')
+
+combined_figure = pn.Row(fig, hist_plots)
+
+combined_figure.save('./figures/Correlation_across_regression_schemes.png')
+
+# ![](./figures/Correlation_across_regression_schemes.png)
