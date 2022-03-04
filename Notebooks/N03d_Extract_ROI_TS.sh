@@ -56,6 +56,7 @@ do
    3dDetrend -prefix - -polort ${POLORT} rm.aux.$2.1D\'  > rm.det.aux.$2.1D
    cat rm.det.aux.$2.1D | tr -s ' ' '\n' | sed '/^$/d' > ${RUN}_mPP.Signal.$2.1D
    rm rm.aux.$2.1D rm.det.aux.$2.1D
+   1d_tool.py -overwrite -infile ${RUN}_mPP.Signal.$2.1D -derivative -write ${RUN}_mPP.Signal.$2.der.1D
 done
 
 echo "=================================="
