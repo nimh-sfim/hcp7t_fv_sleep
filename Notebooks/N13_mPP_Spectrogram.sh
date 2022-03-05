@@ -16,8 +16,8 @@ echo "++ Unsetting the DISPLAY environment variable"
 unset DISPLAY
 
 # Call python program
-echo "++ Calling Python program: N10_mPP_Spectrogram.py -s ${SBJ} -d ${RUN} -r ${REGION} -w ${DATADIR}"
-python ./N10_mPP_Spectrogram.py \
+echo "++ Calling Python program: N13_mPP_Spectrogram.py -s ${SBJ} -d ${RUN} -r ${REGION} -w ${DATADIR}"
+python ./N13_mPP_Spectrogram.py \
     -s ${SBJ} \
     -d ${RUN} \
     -r ${REGION} \

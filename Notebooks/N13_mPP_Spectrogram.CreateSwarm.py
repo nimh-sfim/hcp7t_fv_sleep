@@ -34,20 +34,20 @@ print('++ INFO: Number of Runs = %d' % len(Manuscript_Runs))
 
 # ## Create Logging folder for Swarm jobs
 
-if not osp.exists('./N10_mPP_Spectrogram.logs'):
+if not osp.exists('./N13_mPP_Spectrogram.logs'):
     print('++ INFO: Creating logging dir')
-    os.mkdir('./N10_mPP_Spectrogram.logs')
+    os.mkdir('./N13_mPP_Spectrogram.logs')
 
 # ## Create Swarm File
 
 # Create Swarm file for extracting representative power
 # ==========================================================
-os.system('echo "#swarm -f ./N10_mPP_Spectrogram.SWARM.sh -g 16 -t 16 --partition quick,norm --time 00:20:00 --logdir ./N10_mPP_Spectrogram.logs" > ./N10_mPP_Spectrogram.SWARM.sh')
+os.system('echo "#swarm -f ./N13_mPP_Spectrogram.SWARM.sh -g 16 -t 16 -b 30 --partition quick,norm --time 00:05:00 --logdir ./N13_mPP_Spectrogram.logs" > ./N13_mPP_Spectrogram.SWARM.sh')
 for sbj_run in Manuscript_Runs:
     sbj,run  = sbj_run.split('_',1)
     out_dir  = osp.join(DATA_DIR,sbj,run)
-    for region in ['V4_grp']:
-        os.system('echo "export SBJ={sbj} REGION={reg} RUN={run} DATADIR={ddir}; sh ./N10_mPP_Spectrogram.sh" >> ./N10_mPP_Spectrogram.SWARM.sh'.format(sbj=sbj, run=run, reg=region, ddir=DATA_DIR))
+    for region in ['V4_grp','V4lt_grp','V4ut_grp']:
+        os.system('echo "export SBJ={sbj} REGION={reg} RUN={run} DATADIR={ddir}; sh ./N13_mPP_Spectrogram.sh" >> ./N13_mPP_Spectrogram.SWARM.sh'.format(sbj=sbj, run=run, reg=region, ddir=DATA_DIR))
 
 # ## Submit jobs to the cluster
 #
@@ -55,8 +55,8 @@ for sbj_run in Manuscript_Runs:
 #
 # ```bash
 # # cd /data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks
-# # rm /N10_mPP_Spectrogram.logs/*
-# swarm -f ./N10_mPP_Spectrogram.SWARM.sh -g 16 -t 16 --partition quick,norm --time 00:20:00 --logdir ./N10_mPP_Spectrogram.logs
+# # rm /N13_mPP_Spectrogram.logs/*
+# swarm -f ./N13_mPP_Spectrogram.SWARM.sh -g 16 -t 16 -b 30 --partition quick,norm --time 00:05:00 --logdir ./N13_mPP_Spectrogram.logs
 # watch -n 30 squeue -u javiergc
 # ```
 
