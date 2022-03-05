@@ -37,40 +37,40 @@ echo " +   Discard Volumes relative to mPP = ${VOLS_DISCARD} acquisitions"
 echo " +   POLORT = ${POLORT} polynomials"
 echo " +   Bluring FWHM = ${BLUR_FWHM} mm"
 
-# (2) Spatially Smooth mPP data
-# =============================
-echo "++ INFO: (2) Spatially Smooth mPP data"
-echo "++ ==================================="
-if [ ! -e ./${RUN}_mPP.blur.nii.gz ]; then
-   3dBlurInMask -overwrite                                     \
-                -mask ../ROI.FB.mPP.nii.gz                     \
-                -FWHM ${BLUR_FWHM}                             \
-                -input ./${RUN}_mPP.nii.gz[${VOLS_DISCARD}..$] \
-                -prefix ./${RUN}_mPP.blur.nii.gz
-
-   nifti_tool -strip_extras -overwrite -infiles ${RUN}_mPP.blur.nii.gz
-else
-   echo "++ WARNING: Blur file already exists. Not generating it again."
-fi
-
-# (3) Create SPC version of the blurred data
-# ==========================================
-echo "++ INFO: (3) Create SPC version of the blurred data"
-echo "++ ================================================"
-if [ ! -e ${RUN}_mPP.blur.scale.nii.gz ]; then
-   3dTstat -overwrite -mean -mask ../ROI.FB.mPP.nii.gz -prefix ${RUN}_mPP.MEAN.nii.gz ${RUN}_mPP.blur.nii.gz
-   3dcalc -overwrite                                  \
-       -a ${RUN}_mPP.blur.nii.gz                      \
-       -b ${RUN}_mPP.MEAN.nii.gz                      \
-       -c ../ROI.FB.mPP.nii.gz                        \
-       -expr  'c * min(200, a/b*100)*step(a)*step(b)' \
-       -prefix ${RUN}_mPP.blur.scale.nii.gz
-
-   nifti_tool -strip_extras -overwrite -infiles ${RUN}_mPP.blur.scale.nii.gz
-else
-   echo "++ WARNING: Blur.Scale file already exists. Not generating it again."
-fi
-
+## # (2) Spatially Smooth mPP data
+## # =============================
+## echo "++ INFO: (2) Spatially Smooth mPP data"
+## echo "++ ==================================="
+## if [ ! -e ./${RUN}_mPP.blur.nii.gz ]; then
+##    3dBlurInMask -overwrite                                     \
+##                 -mask ../ROI.FB.mPP.nii.gz                     \
+##                 -FWHM ${BLUR_FWHM}                             \
+##                 -input ./${RUN}_mPP.nii.gz[${VOLS_DISCARD}..$] \
+##                 -prefix ./${RUN}_mPP.blur.nii.gz
+## 
+##    nifti_tool -strip_extras -overwrite -infiles ${RUN}_mPP.blur.nii.gz
+## else
+##    echo "++ WARNING: Blur file already exists. Not generating it again."
+## fi
+## 
+## # (3) Create SPC version of the blurred data
+## # ==========================================
+## echo "++ INFO: (3) Create SPC version of the blurred data"
+## echo "++ ================================================"
+## if [ ! -e ${RUN}_mPP.blur.scale.nii.gz ]; then
+##    3dTstat -overwrite -mean -mask ../ROI.FB.mPP.nii.gz -prefix ${RUN}_mPP.MEAN.nii.gz ${RUN}_mPP.blur.nii.gz
+##    3dcalc -overwrite                                  \
+##        -a ${RUN}_mPP.blur.nii.gz                      \
+##        -b ${RUN}_mPP.MEAN.nii.gz                      \
+##        -c ../ROI.FB.mPP.nii.gz                        \
+##        -expr  'c * min(200, a/b*100)*step(a)*step(b)' \
+##        -prefix ${RUN}_mPP.blur.scale.nii.gz
+## 
+##    nifti_tool -strip_extras -overwrite -infiles ${RUN}_mPP.blur.scale.nii.gz
+## else
+##    echo "++ WARNING: Blur.Scale file already exists. Not generating it again."
+## fi
+## 
 # (4) Extract Representative Timseries for scale.blur 
 # -----------------------------------------------------
 echo "++ INFO: (4) Extract Representative Timseries"
@@ -164,11 +164,11 @@ do
    echo " + INFO: Mask = $1 | Suffix = $2 --> Output = ${RUN}_BASIC.Signal.$2.1D"
    3dmaskave -quiet -mask $1 ${RUN}_Reference.nii.gz   > rm.aux.$2.1D
    3dDetrend -prefix - -polort ${POLORT} rm.aux.$2.1D\'  > rm.det.aux.$2.1D
-   cat rm.det.aux.$2.1D | tr -s ' ' '\n' | sed '/^$/d' > ${RUN}_mPP.blur.scale.Signal.$2.1D
+   cat rm.det.aux.$2.1D | tr -s ' ' '\n' | sed '/^$/d' > ${RUN}_Reference.Signal.$2.1D
    rm rm.aux.$2.1D rm.det.aux.$2.1D
    1d_tool.py -overwrite -infile ${RUN}_Reference.Signal.$2.1D -derivative -write ${RUN}_Reference.Signal.$2.der.1D
 done
- 
+
 # (8.2) Compute variance for Reference
 echo "++ INFO (8.2) Compute variance for output of Reference pipeline"
 echo "==============================================================="
