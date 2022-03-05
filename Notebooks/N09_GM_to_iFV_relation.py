@@ -202,9 +202,13 @@ plt.close()
 
 fig.savefig('./figures/GM_dGM_iFV_Timeseries.png')
 
-pn.Row(pn.Column(pn.pane.PNG('./figures/Fultz_Fig3B_Timeseres_GM_vs_iFV.png', height=200),
-                 pn.pane.PNG('./figures/Fultz_Fig3E_Timeseries_dGM_vs_iFV.png', height=200)),
-                 pn.pane.PNG('./figures/GM_dGM_iFV_Timeseries.png', height=450))
+combined_figure = pn.Row(pn.Column(pn.pane.PNG('./figures/Fultz_Fig3B_Timeseres_GM_vs_iFV.png', height=200),
+                  pn.pane.PNG('./figures/Fultz_Fig3E_Timeseries_dGM_vs_iFV.png', height=200)),
+                  pn.pane.PNG('./figures/GM_dGM_iFV_Timeseries.png', height=450))
+
+combined_figure.save('./figures/GM_dGM_iFV_RepTS_both_papers.png')
+
+# ![](./figures/GM_dGM_iFV_RepTS_both_papers.png)
 
 # **Cross-correlation between GM, -dGM/dt and iFV**
 
@@ -277,8 +281,11 @@ xcorr_plot_GM2iFV.set_title('BOLD-CSF cross-correlation\n EC segments')
 fig.savefig('./figures/Xcorr_GMvsiFV.png')
 plt.close()
 
-pn.Row(pn.pane.PNG('./figures/Fultz_FigS3_Xcorr_GM_vs_iFV.png'),
+combined_figure = pn.Row(pn.pane.PNG('./figures/Fultz_FigS3_Xcorr_GM_vs_iFV.png'),
        pn.pane.PNG('./figures/Xcorr_GMvsiFV.png',height=390))
+combined_figure.save('./figures/Xcorr_GMvsiFV_both_papers.png')
+
+# ![](./figures/Xcorr_GMvsiFV_both_papers.png)
 
 print('++ INFO: Maximal X Correlation Delay is %d seconds' % segments_xcorr.groupby('Lag').mean().abs().idxmax()['xcorr_GM_iFV'])
 
@@ -293,8 +300,11 @@ xcorr_plot_GM2iFV.set_title('-d/dt GM to CSF cross-correlation\n EC segments')
 fig.savefig('./figures/Xcorr_dGMvsiFV.png')
 plt.close()
 
-pn.Row(pn.pane.PNG('./figures/Fultz_Fig3D_Xcorr_dGM_vs_iFV.png'),
+combined_figure = pn.Row(pn.pane.PNG('./figures/Fultz_Fig3D_Xcorr_dGM_vs_iFV.png'),
        pn.pane.PNG('./figures/Xcorr_dGMvsiFV.png',height=390))
+combined_figure.save('./figures/Xcorr_dGMvsiFV_both_papers.png')
+
+# ![](./figures/Xcorr_dGMvsiFV_both_papers.png)
 
 print('++ INFO: Maximal X Correlation Delay is %d seconds' % segments_xcorr.groupby('Lag').mean().abs().idxmax()['xcorr_dGM_iFV'])
 
