@@ -39,7 +39,7 @@ import pandas as pd
 import numpy as np
 import os.path as osp
 from utils.variables import Resources_Dir, DATA_DIR
-
+from utils.basics import load_segments
 from scipy.signal import get_window, welch
 from scipy.stats  import kruskal
 
@@ -50,7 +50,7 @@ import seaborn as sns
 
 # ## Configuration of Scan Level PSD Analysis
 
-REGION      = 'V4_grp'      # Work with Group Level FV mask
+REGION      = 'V4lt_grp'      # Work with Group Level FV mask
 WIN_LENGTH  = 60            # Window Length for Welch Method (in seconds)
 WIN_OVERLAP = 45            # Window Overlap for Welch Method (in seconds)
 NFFT        = 128           # FFT Length for Welch Method (in number of samples)
@@ -58,21 +58,21 @@ SCALING     = 'density'     # Scaling method
 DETREND     = 'constant'    # Type of detrending
 FS          = 1             # 1/TR (in Hertzs)
 NACQ        = 890           # Number of time-points
+ONLY_NOTaliased_HR = False
 
-# # Loadings Segment info and Segment information
+# # Loading and selecting Scan segments of interest
 
 Scan_Segments = {}
-EC_Segments_Path = osp.join(Resources_Dir,'EC_Segments_Info.pkl')
-EO_Segments_Path = osp.join(Resources_Dir,'EO_Segments_Info.pkl')
-Scan_Segments['EC'] = pd.read_pickle(EC_Segments_Path)
-Scan_Segments['EO'] = pd.read_pickle(EO_Segments_Path)
+if ONLY_NOTaliased_HR:
+    segment_HR_info = pd.read_csv(osp.join(Resources_Dir,'HR_segmentinfo.csv'), index_col=0)
+    Scan_Segments['EC'] = segment_HR_info[((segment_HR_info['HR aliased']<0.03) | (segment_HR_info['HR aliased']>0.07)) & (segment_HR_info['Type']=='EC')]
+    Scan_Segments['EO'] = segment_HR_info[((segment_HR_info['HR aliased']<0.03) | (segment_HR_info['HR aliased']>0.07)) & (segment_HR_info['Type']=='EO')]
+else:
+    Scan_Segments['EC'] = load_segments('EC',min_dur=60)
+    Scan_Segments['EO'] = load_segments('EO',min_dur=60)
+num_EC = Scan_Segments['EC'].shape[0]
+num_EO = Scan_Segments['EO'].shape[0]
 
-# ## Select only segments with duration about 60 seconds
-
-Scan_Segments['EC'] = Scan_Segments['EC'][Scan_Segments['EC']['Duration']>60]
-Scan_Segments['EO'] = Scan_Segments['EO'][Scan_Segments['EO']['Duration']>60]
-num_EC              = Scan_Segments['EC'].shape[0]
-num_EO              = Scan_Segments['EO'].shape[0]
 print('++ Number of EC segments with duration > 60 seconds is %d' % num_EC)
 print('++ Number of EO segments with duration > 60 seconds is %d' % num_EO)
 
@@ -80,9 +80,11 @@ print('++ Number of EO segments with duration > 60 seconds is %d' % num_EO)
 # ## Compute Peridiograms (via Welch method) on a segment-per-segment basis
 
 # %%time
+EC_col_names = [tuple(x) for r,x in Scan_Segments['EC'][['Run','Segment_UUID']].iterrows()]
+EO_col_names = [tuple(x) for r,x in Scan_Segments['EO'][['Run','Segment_UUID']].iterrows()]
 ## Load periods of EC and compute the peridiogram for each fo them
 # ================================================================
-Scan_Segments_Peridiograms = {'EC':pd.DataFrame(),'EO':pd.DataFrame()}
+Scan_Segments_Peridiograms = {'EC':pd.DataFrame(columns=EC_col_names),'EO':pd.DataFrame(columns=EO_col_names)}
 for segment_type in ['EC','EO']:
     # For each segment
     for i, segment in Scan_Segments[segment_type].iterrows():
@@ -101,12 +103,14 @@ for segment_type in ['EC','EO']:
     Scan_Segments_Peridiograms[segment_type].index=wf
     Scan_Segments_Peridiograms[segment_type].index.rename('Frequency',inplace=True)
 
-Scan_Segments_Peridiograms['EC']
+Scan_Segments_Peridiograms['EC'].head()
 
 # ## Save Peridiograms to Disk
 
-Scan_Segments_Peridiograms['EC'].to_pickle(osp.join(Resources_Dir,'ET_Peridiograms_perSegments_EC.pkl'))
-Scan_Segments_Peridiograms['EO'].to_pickle(osp.join(Resources_Dir,'ET_Peridiograms_perSegments_EO.pkl'))
+if not ONLY_NOTaliased_HR:
+    print("++ Writing peridiograms to disk")
+    Scan_Segments_Peridiograms['EC'].to_pickle(osp.join(Resources_Dir,'ET_Peridiograms_perSegments_EC.{region}.pkl'.format(region=REGION)))
+    Scan_Segments_Peridiograms['EO'].to_pickle(osp.join(Resources_Dir,'ET_Peridiograms_perSegments_EO.{region}.pkl'.format(region=REGION)))
 
 # ***
 #
@@ -201,5 +205,31 @@ fig
 # + tags=[]
 fig.savefig('./figures/Fig05_PanelB.png')
 # -
+sns.set(font_scale=1.5)
+sns.set_style("whitegrid",{"xtick.major.size": 0.1,
+    "xtick.minor.size": 0.05,'grid.linestyle': '--'})
+fig, axs   = plt.subplots(1,2,figsize=(20,5))
+sns.lineplot(data=df_todraw, 
+             x='Frequency', 
+             hue='Segment Type', hue_order=['Eyes Closed', 'Eyes Open'],
+             y='PSD (a.u./Hz)', estimator=np.mean, n_boot=100, ax=axs[0])
+axs[0].set_title('Power Spectral Density (Segment Level)')
+axs[0].legend(ncol=1, loc='upper right')
+axs[0].plot(welch_freqs,kw_tests['Bonf_sign'],'k*',lw=5)
+axs[0].set_ylim([0,90])
+axs[0].xaxis.set_major_locator(ticker.MultipleLocator(0.05))
+axs[0].set(xscale="log")
+sns.lineplot(data=df_random_todraw, 
+             x='Frequency', 
+             hue='Segment Type', hue_order=['Random Type 01', 'Random Type 02'],
+             y='PSD (a.u./Hz)', estimator=np.mean, n_boot=100, ax=axs[1])
+axs[1].set_title('Power Spectral Density (Segment Level - Randomized Labels)')
+axs[1].legend(ncol=1, loc='upper right')
+axs[1].plot(welch_freqs,random_kw_tests['Bonf_sign'],'k*',lw=5)
+axs[1].set_ylim([0,90])
+axs[1].xaxis.set_major_locator(ticker.MultipleLocator(0.05))
+axs[1].set(xscale="log")
+fig
+
 
 
