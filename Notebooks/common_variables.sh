@@ -10,3 +10,6 @@ export POLORT=5
 export VOLS_DISCARD=10
 export BLUR_FWHM=4
 export ROI_FV_PATH=`echo ${DATA_DIR}/ALL/ALL_ROI.V4.mPP.nii.gz`
+export ROI_FVlt_PATH=`echo ${DATA_DIR}/ALL/ALL_ROI.V4lt.mPP.nii.gz`
+export ROI_FVut_PATH=`echo ${DATA_DIR}/ALL/ALL_ROI.V4ut.mPP.nii.gz`
+
