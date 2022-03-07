@@ -227,9 +227,9 @@ figure10
 
 # +
 GS_Top100_Runs  = scans_rank[(scans_rank['GSamplitude Rank']<=100)].index.to_list()
-GS_Bot100_Runs  = scans_rank[(scans_rank['GSamplitude Rank']>304)].index.to_list()
+GS_Bot100_Runs  = scans_rank[(scans_rank['PSDsleep Rank']>scans_rank['PSDsleep Rank'].max()-100)].index.to_list()
 PSD_Top100_Runs = scans_rank[(scans_rank['PSDsleep Rank']<=100)].index.to_list()
-PSD_Bot100_Runs = scans_rank[(scans_rank['PSDsleep Rank']>304)].index.to_list()
+PSD_Bot100_Runs = scans_rank[(scans_rank['PSDsleep Rank']>scans_rank['PSDsleep Rank'].max()-100)].index.to_list()
 
 for items,filename in zip([GS_Top100_Runs,GS_Bot100_Runs,PSD_Top100_Runs,PSD_Bot100_Runs],
                       ['Run_List_GS_Top100.{region}.{scenario}.txt'.format(region=region, scenario=scenario),
