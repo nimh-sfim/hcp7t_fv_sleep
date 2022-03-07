@@ -138,12 +138,12 @@ aux['ROI Label']  = aux.index + 1
 aux
 
 aux.to_csv('/data/SFIMJGC_HCP7T/HCP7T/ALL/Schaefer2018_200Parcels_7Networks_order_mPP.GM_Ribbon.Centroid_RAS.csv', sep=',', index=None)
-aux[['R','A','S']].to_csv('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_Node_Coordinates.txt', sep=' ', index=None, header=None)
-aux['ROI Name'].to_csv('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_Node_Labels.txt', sep=' ', index=None, header=None)
+aux[['R','A','S']].to_csv('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources_NBS/NBS_Node_Coordinates.txt', sep=' ', index=None, header=None)
+aux['ROI Name'].to_csv('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources_NBS/NBS_Node_Labels.txt', sep=' ', index=None, header=None)
 
 # ### Create BrainNetViewer Node File
 
-aux[['R','A','S','Node Color','Node Size','Short ROI Name']].to_csv('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/BrainNet_Nodes.node', sep=' ', index=None, header=None)
+aux[['R','A','S','Node Color','Node Size','Short ROI Name']].to_csv('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources_NBS/BrainNet_Nodes.node', sep=' ', index=None, header=None)
 
 # ***
 # # Remove Small ROIs from the Atlas
