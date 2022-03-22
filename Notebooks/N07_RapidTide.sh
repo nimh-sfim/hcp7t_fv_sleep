@@ -117,6 +117,41 @@ cd ..
 # ====================== PREPROCESSING PIPELINES THAT REQUIRE RAPIDTIDE OUTPUTS ================= #
 # =============================================================================================== #
 
+# (2) Blur + Bandpassing + RapidTide Voxel-wise Regressor
+# =======================================================
+echo "++ INFO: (2) Blur + Bandpassing + RapidTide Voxel-wise Regressor"
+echo "++ ============================================================="
+3dTproject -overwrite                                           \
+           -mask   ../ROI.FB.mPP.nii.gz                         \
+           -input  ${RUN}_mPP.blur.scale.nii.gz                 \
+           -polort ${POLORT}                                    \
+           -ort    ${RUN}_Bandpass_Regressors.txt               \
+           -dsort  ./${RUN}_BASICnobpf.rapidtide/${RUN}_BASICnobpf_lagregressor.nii.gz \
+           -prefix ${RUN}_Referencepp.nii.gz
+echo " + OUTPUT from Reference+: ${RUN}_Referencepp.nii.gz"
+
+# (2.1) Extract Representative Timseries for Behzadi_COMPCORpp
+echo "++ INFO: (2.1) Extract Representative Timseries"
+echo "==============================================="
+for items in ${ROI_FV_PATH},'V4_grp' ${ROI_FVlt_PATH},'V4lt_grp' ${ROI_FVut_PATH},'V4ut_grp' ../ROI.V4_e.mPP.nii.gz,'V4_e' ../ROI.Vl_e.mPP.nii.gz,'Vl_e' ../ROI.GM.mPP.nii.gz,'GM' ../ROI.FB.mPP.nii.gz,'FB' ../ROI.WM_e.mPP.nii.gz,'WM_e'
+do
+   IFS="," ; set -- $items
+   echo " + INFO: Mask = $1 | Suffix = $2 --> Output = ${RUN}_Referencepp.Signal.$2.1D"
+   3dmaskave -quiet -mask $1 ${RUN}_Referencepp.nii.gz   > rm.aux.$2.1D
+   3dDetrend -prefix - -polort ${POLORT} rm.aux.$2.1D\'  > rm.det.aux.$2.1D
+   cat rm.det.aux.$2.1D | tr -s ' ' '\n' | sed '/^$/d' > ${RUN}_Referencepp.Signal.$2.1D
+   rm rm.aux.$2.1D rm.det.aux.$2.1D
+   1d_tool.py -overwrite -infile ${RUN}_Referencepp.Signal.$2.1D -derivative -write ${RUN}_Referencepp.Signal.$2.der.1D
+done
+
+# (2.2) Generate variance maps
+echo "++ (2.2) INFO: Compute variance for output of COMPCORpp pipeline"
+echo "================================================================"
+3dTstat -overwrite -stdev -prefix ${RUN}_Referencepp.VAR.nii.gz ${RUN}_Referencepp.nii.gz
+3dcalc  -overwrite -a ${RUN}_Referencepp.VAR.nii.gz -expr 'a*a' -prefix ${RUN}_Referencepp.VAR.nii.gz 
+
+exit
+
 # (2) Behzadi CompCor Pipeline + Rapidtide Regressor
 # ==================================================
 echo "++ INFO: (2) Behzadi CompCorr Pre-processing + RapidTide Voxel-wise Regressor"
@@ -201,9 +236,14 @@ echo "++ INFO: (5) Compute the variance explained by the voxel-wise lagged regre
 echo "++ ==========================================================================="
 for pipeline in Reference BASIC BASICpp Behzadi_COMPCOR Behzadi_COMPCORpp
 do
+    # R2 maps for the lagged regressors from rapidtide (which are already detrended and bandpass filtered)
+    # ====================================================================================================
     3dTcorrelate -overwrite -prefix ${RUN}_${pipeline}.R2_lagreg.nii.gz -pearson ${RUN}_${pipeline}.nii.gz ${RUN}_BASICnobpf.rapidtide/${RUN}_BASICnobpf_lagregressor.nii.gz
     3dcalc -overwrite -a            ${RUN}_${pipeline}.R2_lagreg.nii.gz -expr 'a*a' -prefix ${RUN}_${pipeline}.R2_lagreg.nii.gz
 
+    # R2 maps for the zero-lag overall FV signal (which required filtering to match that of the pre-processing everywhere else). The FV signal
+    # is extracted from the mPP data to avoid spatial smoothing, yet becuase of that, it lacks the same filtering.
+    # ========================================================================================================================================
     1dBandpass 0.01 0.1 ${RUN}_mPP.Signal.V4lt_grp.1D > ${RUN}_mPP.det_bpf.Signal.V4lt_grp.1D
     3dTcorr1D -pearson -overwrite -mask ../ROI.FB.mPP.nii.gz -prefix ${RUN}_${pipeline}.R2_V4lt_grp.nii.gz ${RUN}_${pipeline}.nii.gz ${RUN}_mPP.det_bpf.Signal.V4lt_grp.1D
     3dcalc -overwrite -a       ${RUN}_${pipeline}.R2_V4lt_grp.nii.gz -expr 'a*a' -prefix ${RUN}_${pipeline}.R2_V4lt_grp.nii.gz
