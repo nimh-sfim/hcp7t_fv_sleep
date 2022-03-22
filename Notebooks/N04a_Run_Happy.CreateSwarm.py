@@ -22,8 +22,10 @@ import pandas as pd
 import subprocess
 import hvplot.pandas
 import holoviews as hv
+import panel as pn
 from utils.variables import Resources_Dir, DATA_DIR
 from utils.basics import get_available_runs, aliased_freq
+from IPython.display import Markdown as md
 
 # ***
 #
@@ -38,11 +40,16 @@ hrs_df = pd.DataFrame(columns=['Heart Rate','Aliased Heart Rate'])
 for hr in np.linspace(start=card_min_f,stop=card_max_f,num=n):
     hrs_df = hrs_df.append({'Heart Rate':hr, 'Aliased Heart Rate':aliased_freq(fmri_fs,hr)}, ignore_index=True)
 
-hv.VLine(0.03).opts(line_color='k',line_dash='dashed', xlim=(-.1,2)) * \
+plot = hv.VLine(0.03).opts(line_color='k',line_dash='dashed', xlim=(-.1,2)) * \
 hv.VLine(0.07).opts(line_color='k',line_dash='dashed') * \
 hv.VLine(1).opts(line_color='k') * \
 hrs_df.hvplot.hist(bins=100, alpha=0.5, normed=True).opts(legend_position='top_right') * \
 hrs_df.hvplot.kde(alpha=.3).opts(xlabel='Frequency [Hz]', ylabel='Density', toolbar=None, fontsize={'xticks':18, 'yticks':18, 'xlabel':18, 'ylabel':18, 'legend':18}) 
+
+pn.pane.HoloViews(plot).save('./figures/Revision1_SuppFigure02.png')
+
+text="![](./figures/Revision1_SuppFigure02.png)"
+md(text)
 
 # > Figure 3. Simulation of frequency aliasing for cardiac pulsations. The sampling frequency of the fMRI data is 1Hz (black continuous line). Our target fluctuations of interest sit in the vicinity of 0.05Hz, and we will attempt their detection by focusing our attention on the frequency range [0.03Hz - 0.05 Hz] (narrow band between the two vertical balck dashed lines). Typical cardiac rates range from 50 to 80 beats per minute while subjects are resting (blue histogram/distribution). Due to frequency aliasing, cardiac pulsations at those frequencies will appear at lower parts of the spectrum in the fMRI recordings. As the figure shows, given an Fs=1 Hz there is potential for those to overlap (red histogram/distribution) with the target frequency of our study. 
 
