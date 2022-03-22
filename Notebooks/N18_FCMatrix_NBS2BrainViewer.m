@@ -16,7 +16,7 @@ for scenario = scenarios
             data = data + data.';
             writematrix(data,output_path,"Delimiter"," ");
             movefile(output_path,output_path2);
-            disp("++ INFO: ["+scenario+","+contrast+"] --> Number of Significant Connections is " + (sum(sum(data))/2))
+            disp("++ INFO: ["+scenario+","+contrast+"] --> Number of Significant Connections is " + (sum(sum(data))/2) + " originated in " + sum(sum(data)>0) + " nodes.")
         else
             % File does not exist.
             disp("Data does not exists for ["+scenario+","+contrast+"]");
