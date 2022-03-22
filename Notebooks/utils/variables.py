@@ -22,6 +22,7 @@ XNAT_PASSWORD = 'your_password'
 # Path to files that are used often throughout the project
 # ========================================================
 Resources_Dir                = osp.join(SCRIPTS_DIR,'Resources')              # Resources Directory --> will contain some derivatives such as .pkl files, .py files, etc.
+Resources_NBS_Dir            = osp.join(SCRIPTS_DIR,'Resources_NBS')          # Resources NBS Directory --> will contain all files necessary to use Matlab NBS and BrainViewer
 SbjList_Orig_Path            = osp.join(Resources_Dir,'7T_SubjectList.csv')   # Path to the 7T Behavioral Info file downloaded from ConnectomeDB
 ProjectFiles_DF_Path         = osp.join(Resources_Dir,'7T_ProjectFiles.pkl')  # Pickle file with info about what files were downloaded from ConnectomeDB using notebook N01.
 Avail_fMRI_Runs_Info_DF_Path = osp.join(Resources_Dir,'7T_XNAT_Available_Runs_Info.pkl') # Pikle file with a list of available fMRI runs
