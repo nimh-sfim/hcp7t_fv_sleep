@@ -29,6 +29,7 @@
 # +
 import pandas as pd
 import numpy  as np
+import panel  as pn
 import hvplot.pandas
 import holoviews as hv
 import matplotlib.pyplot as plt
@@ -42,6 +43,8 @@ from utils.variables import DATA_DIR, Resources_Dir
 from scipy.signal import get_window, spectrogram, welch
 from scipy.stats import kruskal, wilcoxon, ttest_ind, mannwhitneyu
 from scipy.signal import find_peaks
+
+from IPython.display import Markdown as md
 
 from bokeh.models.formatters import DatetimeTickFormatter
 formatter = DatetimeTickFormatter(minutes = ['%Mmin:%Ssec'])
@@ -144,29 +147,59 @@ aux_data.columns = aux_json['Columns']
 aux_data.index  =  cardiac_25hz_df_index
 aux_data.index.name = 'Time'
 
-aux_data['cardiacfromfmri_dlfiltered_25.0Hz'].hvplot(c='k',width=1500,xformatter=formatter) + \
+plot = aux_data['cardiacfromfmri_dlfiltered_25.0Hz'].hvplot(c='k',width=1500,xformatter=formatter) + \
 (cardiac_welch_df[sample_scan].hvplot(c='k', ylabel='Power Spectrum') * \
 hv.Text(8,4,'HR = {hr:.2f} Hz --> HR_aliased = {hra:.2f} Hz'.format(hr=cardiac_hr_df.loc[sample_scan,'HR'],hra=cardiac_hr_df.loc[sample_scan,'HR_aliased'])))
+pn.pane.HoloViews(plot).save('./figures/card_estim_example.png')
+
+text="![](./figures/card_estim_example.png)"
+md("%s"%text)
 
 #
 # #### Distribution of scan-level frequencies
 #
 # **Cardiac Frequency Distribution**: Here is the distribution of estimated cardiac rates at the scan level. In red, we show what are normal ranges for resting cardiac rates (50bpm or 0.83 Hz <- -> 80bpm or 1.33 Hz). We can observe that with a few exception, estimated cardiac frequencies fall within tose normal ranges
 
-hv.Rectangles([(50/60,0,80/60,10)]).opts(alpha=0.5, color='r') * \
-cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.hist(y='HR', color='gray', bins=30, normed=True, title='(A) Distribution of Scan-Level Heart Rate',ylim=(0,5), xlim=(0,2)) * \
+plot=hv.Rectangles([(50/60,0,80/60,10)]).opts(alpha=0.5, color='r') * \
+cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.hist(y='HR', color='gray', bins=30, normed=True, title='',ylim=(0,5), xlim=(0,2), height=300, width=500) * \
 cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.kde( y='HR', color='gray', xlabel='Heart Rate [Hz]', ylabel='Density', fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}).opts(toolbar=None)
+pn.pane.HoloViews(plot).save('./figures/Revision1_Figure7_PanelA.png')
+text="![](./figures/Revision1_Figure7_PanelA.png)"
+md("%s"%text)
+
+plot = cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.box(y='HR', by='Scan Type', title='', hover_cols=['Scan ID'], tools=['hover'],
+                                                                fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, ylabel='HR [Hz]', color='Scan Type', cmap=['orange','lightblue'], legend=False, width=300, height=300).opts(toolbar=None)
+pn.pane.HoloViews(plot).save('./figures/Revision1_Figure7_PanelC.png')
+text="![](./figures/Revision1_Figure7_PanelC.png)"
+md("%s"%text)
+
+print('++ INFO: Statistical Tests for differences in HR across scan types')
+print('++ ================================================================')
+awake_hrs  = cardiac_hr_df[cardiac_hr_df['Scan Type']=='Awake']['HR']
+drowsy_hrs = cardiac_hr_df[cardiac_hr_df['Scan Type']=='Drowsy']['HR']
+tt_s, tt_p = ttest_ind(    awake_hrs, drowsy_hrs, alternative='two-sided')
+mw_s, mw_p = mannwhitneyu( awake_hrs, drowsy_hrs, alternative='two-sided')
+kk_s, kk_p = kruskal(      awake_hrs, drowsy_hrs)
+print('   T-Test                   [HR EO different than EC] T    = %2.2f | p=%0.5f' % (tt_s, tt_p))
+print('   Mann-Whitney U Rank Test [HR EO different than EC] Stat = %2.2f | p=%0.5f' % (mw_s, mw_p))
+print('   Kruskas-Wallis H Test    [HR EO different than EC] Stat = %2.2f | p=%0.5f' % (kk_s, kk_p))
 
 # **Aliased Cardiac Frequency Distribution:** distribution of aliased cardiac frequencies. We can see that those overlap with the targeted range of frequencies of this study (in green).
 
-hv.Rectangles([(0.03,0,0.07,10)]).opts(alpha=0.5, color='g') * \
-cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.hist(y='HR_aliased', color='gray', bins=30, normed=True, title='(B) Distribution of Scan-Level Aliased Heart Rate', ylim=(0,10), xlim=(-.1,.8)) * \
+plot=hv.Rectangles([(0.03,0,0.07,10)]).opts(alpha=0.5, color='g') * \
+cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.hist(y='HR_aliased', color='gray', bins=30, normed=True, title='', ylim=(0,10), xlim=(-.1,.8), height=300, width=500) * \
 cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.kde(y='HR_aliased', color='gray', xlabel='Aliased Heart Rate [Hz]', ylabel='Density', fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, xlim=(-.1,.8)).opts(toolbar=None)
+pn.pane.HoloViews(plot).save('./figures/Revision1_Figure7_PanelB.png')
+text="![](./figures/Revision1_Figure7_PanelB.png)"
+md("%s"%text)
 
 # * Plot group differences in aliased HR across scan types 
 
-cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.box(y='HR_aliased', by='Scan Type', title='(C) Aliased HR segregated by Scan Type', hover_cols=['Scan ID'], tools=['hover'],
-                                                                fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, ylabel='Aliased HR [Hz]', color='Scan Type', cmap=['orange','lightblue'], legend=False).opts(toolbar=None)
+plot = cardiac_hr_df.reset_index(drop=True).infer_objects().hvplot.box(y='HR_aliased', by='Scan Type', title='', hover_cols=['Scan ID'], tools=['hover'],
+                                                                fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, ylabel='Aliased HR [Hz]', color='Scan Type', cmap=['orange','lightblue'], legend=False, width=300, height=300).opts(toolbar=None)
+pn.pane.HoloViews(plot).save('./figures/Revision1_Figure7_PanelC.png')
+text="![](./figures/Revision1_Figure7_PanelC.png)"
+md("%s"%text)
 
 # * Test for statistical differences in aliased HR at the group level
 
@@ -211,7 +244,7 @@ for r,row in segments.iterrows():
     offset    = pd.Timedelta(int(row['Offset']), unit='s')
     time_mask = (cardiac_25hz_df.index >=onset) & (cardiac_25hz_df.index <=offset)
     ts        = cardiac_25hz_df.loc[time_mask,scanID]
-    wf, wc      = welch(ts, fs=fs_card, window=get_window(('tukey',0.25),750), noverlap=375, scaling='density', detrend='constant', nfft=1024)
+    wf, wc    = welch(ts, fs=fs_card, window=get_window(('tukey',0.25),750), noverlap=375, scaling='density', detrend='constant', nfft=1024)
     hr        = wf[wc.argmax()]
     # Compute aliased HR
     hr_alias  = aliased_freq(fs_fmri,hr)
@@ -229,19 +262,46 @@ segments.to_csv(path)
 print('++ INFO: Save scan-wise HR info to disk [%s]' % path)
 segments.head()
 
-hv.Rectangles([(50/60,0,80/60,10)]).opts(alpha=0.5, color='r') * \
-segments.reset_index(drop=True).infer_objects().hvplot.hist(y='HR', color='gray', bins=30, normed=True, title='(D) Distribution of Segment-Level Heart Rate',ylim=(0,5), xlim=(0,2)) * \
+plot = hv.Rectangles([(50/60,0,80/60,10)]).opts(alpha=0.5, color='r') * \
+segments.reset_index(drop=True).infer_objects().hvplot.hist(y='HR', color='gray', bins=30, normed=True, title='',ylim=(0,5), xlim=(0,2), height=300, width=500) * \
 segments.reset_index(drop=True).infer_objects().hvplot.kde( y='HR', color='gray', xlabel='Heart Rate [Hz]', ylabel='Density', fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}).opts(toolbar=None)
+pn.pane.HoloViews(plot).save('./figures/Revision1_Figure7_PanelD.png')
+text="![](./figures/Revision1_Figure7_PanelD.png)"
+md("%s"%text)
 
-hv.Rectangles([(0.03,0,0.07,10)]).opts(alpha=0.5, color='g') * \
-segments.reset_index(drop=True).infer_objects().hvplot.hist(y='HR_aliased', color='gray', bins=30, normed=True, title='(E) Distribution of Segment-Level Aliased Heart Rate', ylim=(0,10), xlim=(-.1,.8)) * \
-segments.reset_index(drop=True).infer_objects().hvplot.kde(y='HR_aliased', color='gray', xlabel='Aliased Heart Rate [Hz]', ylabel='Density', fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, xlim=(-.1,.8)).opts(toolbar=None)
-
-segments.reset_index(drop=True).infer_objects().hvplot.box(y='HR_aliased', by='Segment Type', 
-                                                           title='(F) Aliased HR segregated by Segment Type',fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, 
-                                                           ylabel='Aliased HR [Hz]', color='Segment Type', cmap=['orange','lightblue'], legend=False).opts(toolbar=None)
+plot = segments.reset_index(drop=True).infer_objects().hvplot.box(y='HR', by='Segment Type', width=300, height=300,
+                                                           title='',fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, 
+                                                           ylabel='HR [Hz]', color='Segment Type', cmap=['orange','lightblue'], legend=False).opts(toolbar=None)
+pn.pane.HoloViews(plot).save('./figures/Revision1_Figure7_PanelX.png')
+text="![](./figures/Revision1_Figure7_PanelX.png)"
+md("%s"%text)
 
 print('++ INFO: Statistical Tests for differences in HR across segment types')
+print('++ ==================================================================')
+eo_hrs = segments[segments['Segment Type']=='EO']['HR']
+ec_hrs = segments[segments['Segment Type']=='EC']['HR']
+tt_s, tt_p = ttest_ind(    eo_hrs, ec_hrs, alternative='two-sided')
+mw_s, mw_p = mannwhitneyu( eo_hrs, ec_hrs, alternative='two-sided')
+kk_s, kk_p = kruskal(      eo_hrs, ec_hrs)
+print('   T-Test                   [HR EO different than EC] T    = %2.2f | p=%0.5f' % (tt_s, tt_p))
+print('   Mann-Whitney U Rank Test [HR EO different than EC] Stat = %2.2f | p=%0.5f' % (mw_s, mw_p))
+print('   Kruskas-Wallis H Test    [HR EO different than EC] Stat = %2.2f | p=%0.5f' % (kk_s, kk_p))
+
+plot = hv.Rectangles([(0.03,0,0.07,10)]).opts(alpha=0.5, color='g') * \
+segments.reset_index(drop=True).infer_objects().hvplot.hist(y='HR_aliased', color='gray', bins=30, normed=True, title='', ylim=(0,10), xlim=(-.1,.8), height=300, width=500) * \
+segments.reset_index(drop=True).infer_objects().hvplot.kde(y='HR_aliased', color='gray', xlabel='Aliased Heart Rate [Hz]', ylabel='Density', fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, xlim=(-.1,.8)).opts(toolbar=None)
+pn.pane.HoloViews(plot).save('./figures/Revision1_Figure7_PanelE.png')
+text="![](./figures/Revision1_Figure7_PanelE.png)"
+md("%s"%text)
+
+plot = segments.reset_index(drop=True).infer_objects().hvplot.box(y='HR_aliased', by='Segment Type', width=300, height=300,
+                                                           title='',fontsize={'xticks':18,'yticks':18,'ylabel':18,'xlabel':18, 'title':18}, 
+                                                           ylabel='Aliased HR [Hz]', color='Segment Type', cmap=['orange','lightblue'], legend=False).opts(toolbar=None)
+pn.pane.HoloViews(plot).save('./figures/Revision1_Figure7_PanelF.png')
+text="![](./figures/Revision1_Figure7_PanelF.png)"
+md("%s"%text)
+
+print('++ INFO: Statistical Tests for differences in aliased HR across segment types')
 print('++ ==================================================================')
 eo_hrs = segments[segments['Segment Type']=='EO']['HR_aliased']
 ec_hrs = segments[segments['Segment Type']=='EC']['HR_aliased']
