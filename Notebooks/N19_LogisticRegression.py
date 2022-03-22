@@ -33,7 +33,7 @@ import holoviews as hv
 from scipy.stats import ttest_ind
 import matplotlib.pyplot as plt
 import os.path as osp
-from utils.basics import get_available_runs
+from utils.basics import get_available_runs, load_motion_FD, load_motion_DVARS
 from utils.variables import DATA_DIR, Resources_Dir
 
 from sklearn.model_selection import StratifiedKFold
@@ -162,6 +162,16 @@ for GS_scenario in ['Reference','Basic','Basic+','CompCor','CompCor+']:
     print(' + INFO [%s]: df.shape = %s' % (GS_scenario,str(GS_Windowed[GS_scenario].shape)))
 GS_Windowed[GS_scenario].sample(5)
 
+# ***
+#
+# ## Load Motion
+
+motFD    = load_motion_FD(Manuscript_Runs, index=time_index)
+motDVARS = load_motion_DVARS(Manuscript_Runs, index=time_index)
+
+motFD_Windowed    = motFD.rolling(window=spectrogram_windur, center=True).quantile(0.99).dropna()
+motDVARS_Windowed = motDVARS.rolling(window=spectrogram_windur, center=True).quantile(0.99).dropna()
+
 # ## Generate Classification Problem
 
 data = pd.DataFrame()
@@ -172,6 +182,8 @@ data['GS[Basic+]']    = GS_Windowed['Basic+'].melt()['value']
 data['GS[CompCor]']   = GS_Windowed['CompCor'].melt()['value']
 data['GS[CompCor+]']  = GS_Windowed['CompCor+'].melt()['value']
 data['EC']          = EC_Windowed.melt()['value']
+data['FD']          = motFD_Windowed.melt()['value']
+data['DVARS']          = motDVARS_Windowed.melt()['value']
 data['Label']       = EC_Windowed_Labels.melt()['value']
 print(data.shape)
 
@@ -201,7 +213,7 @@ data_umbalanced = data.copy()
 
 # +
 # %%time
-input_features         = ['PSDsleep','GSamp[Reference]','GSamp[BASIC]','GSamp[BASIC+]','GSamp[COMPCOR]','GSamp[COMPCOR+]','Control','PSD & GSamp[CompCor+]']
+input_features         = ['PSDsleep','GSamp[Reference]','GSamp[BASIC]','GSamp[BASIC+]','GSamp[COMPCOR]','GSamp[COMPCOR+]','Control','PSD & GSamp[CompCor+]', 'PSD & Motion']
 scores_umbalanced      = pd.DataFrame(index=np.arange(k_folds))
 predictions_umbalanced = {}
 true_vals_umbalanced   = {}
@@ -236,6 +248,12 @@ for metric in input_features:
         y = data_umbalanced['Label']
     if metric == 'PSD & GSamp[CompCor+]':
         X = data_umbalanced[['PSDsleep','GS[CompCor+]']].values
+        y = data_umbalanced['Label']
+    if metric == 'PSD & Motion':
+        X = data_umbalanced[['PSDsleep','FD','DVARS']].values
+        y = data_umbalanced['Label']
+    if metric == 'All':
+        X = data_umbalanced.drop(['Label','FD','DVARS','PSDsleep','EC'],axis=1).values
         y = data_umbalanced['Label']
     aux_num_awake  = (y=='EO/Awake').sum()
     aux_num_drowsy = (y=='EC/Drowsy').sum()
@@ -275,7 +293,7 @@ umbal_boxplot.xaxis.set_tick_params(rotation=90, labelsize=14)
 umbal_boxplot.yaxis.set_tick_params(labelsize=14)
 umbal_boxplot.set_ylim(0,1)
 
-scores_umbalanced
+data_umbalanced.drop(['Label','FD','DVARS','PSDsleep'],axis=1)
 
 print('Statistical Test for Umbalanced/Original Sample Scenario')
 print('========================================================')
@@ -290,4 +308,10 @@ print('PSD           vs. GS[Smoothing]:  %s' % str(ttest_ind(scores_umbalanced['
 print('-----')
 print('GS[CompCor+] vs. GS[Smoothing]:  %s' % str(ttest_ind(scores_umbalanced['GSamp[COMPCOR+]'],scores_umbalanced['GSamp[Reference]'], alternative='two-sided')))
 
-scores_umbalanced.mean().diff()
+scores_umbalanced.mean()
+
+scores_umbalanced.mean()
+
+PSD_Windowed
+
+
