@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Author: Javier Gonzalez-Castillo
-# Date last modification: Nov 1st 2021
+# Date last modification: March 6th, 2022
 
 set -e
 
@@ -32,7 +32,8 @@ echo " +       3dTcorr1D -overwrite -mask ${DATADIR}/${SBJ}/ROI.FB.mPP.nii.gz -p
 echo "++ INFO: Convert to Z-scores via the Fisher Transformation"
 echo " +       3dcalc -overwrite -a ${CM_PATH} -m ${DATADIR}/${SBJ}/ROI.FB.mPP.nii.gz -expr 'm*atanh(a)' -prefix ${CM_Z_PATH}"
 3dcalc -overwrite -a ${CM_PATH} -m ${DATADIR}/${SBJ}/ROI.FB.mPP.nii.gz -expr 'm*atanh(a)' -prefix ${CM_Z_PATH}
- 
+
+# March 6th, 2022: May be able to delete this.
 echo "++ INFO: Extracting average R per ROI (7 Networks)"
 3dROIstats -nomeanout \
              -quiet \

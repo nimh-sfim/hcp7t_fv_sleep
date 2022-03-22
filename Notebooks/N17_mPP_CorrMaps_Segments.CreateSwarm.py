@@ -39,8 +39,8 @@ from IPython.display import Markdown as md
 
 # Notebook Configuration
 REGION     = 'V4lt_grp'
-REGRESSION = 'Reference'
-remove_HRa_scans = False
+REGRESSION = 'BASIC' # This corresponds to the Basic pre-processing pipeline (as named in the manuscript)
+remove_HRa_scans = True
 
 # ***
 # # Load Lists of Scans
@@ -120,30 +120,24 @@ for item in Manuscript_Runs:
 #
 # > **NOTE**: I recommend you only run the swarm jobs when ```remove_HRa_scans = False``` becuase that way you will have all ouputs created for all scans. Next, when you want to compare results without including scans with overlapped HRa, you can just skip this part of the code and go directly to loading results
 
-# > ## Delete previously created files (random IDs)
-# ```bash
-# # cd /data/SFIMJGC_HCP7T/HCP7T
-# if [ -f N17_outputs_to_delete.txt ]; then
-#    rm N17_outputs_to_delete.txt
-# fi
-#
-# find ./ -name "rm.??.rfMRI_REST?_??_mPP.????????-????-????-????-????????????.1D"         > N17_outputs_to_delete.txt
-# find ./ -name "rm.??.rfMRI_REST?_??_mPP.????????-????-????-????-????????????.cmap.nii"  >> N17_outputs_to_delete.txt
-# find ./ -name "rm.??.rfMRI_REST?_??_mPP.????????-????-????-????-????????????.Zcmap.nii" >> N17_outputs_to_delete.txt
-#
-#     
-# for SUFFIX in mPP mPP.SC01_errts mPP.SC02_errts mPP.SC06_errts 
-# do
-#     find ./ -name "rm.??.rfMRI_REST?_??_${SUFFIX}.????????-????-????-????-????????????.cmap.Schaefer2018_7Nws_200.1D" >> N17_outputs_to_delete.txt
-#     find ./ -name "rm.??.rfMRI_REST?_??_${SUFFIX}.????????-????-????-????-????????????.cmap.Schaefer2018_17Nws_200.1D" >> N17_outputs_to_delete.txt
-#     find ./ -name "rm.??.rfMRI_REST?_??_${SUFFIX}.????????-????-????-????-????????????.cmap.nii*" >> N17_outputs_to_delete.txt
-#     find ./ -name "rm.??.rfMRI_REST?_??_${SUFFIX}.????????-????-????-????-????????????.Zcmap.nii*" >> N17_outputs_to_delete.txt
-# done
-#
-# sed -i -e 's/^/rm /' N17_outputs_to_delete.txt
-# sh ./N17_outputs_to_delete.txt
-# # rm ./N17_outputs_to_delete.txt
-# ```
+text='''
+```bash
+cd /data/SFIMJGC_HCP7T/HCP7T
+if [ -f N17_outputs_to_delete.txt ]; then
+   rm N17_outputs_to_delete.txt
+fi
+
+find ./ -name "rm.??.rfMRI_REST?_??_{REGRESSION}.????????-????-????-????-????????????.1D"                             > N17_outputs_to_delete.txt
+find ./ -name "rm.??.rfMRI_REST?_??_{REGRESSION}.????????-????-????-????-????????????.cmap.nii"                      >> N17_outputs_to_delete.txt
+find ./ -name "rm.??.rfMRI_REST?_??_{REGRESSION}.????????-????-????-????-????????????.Zcmap.nii"                     >> N17_outputs_to_delete.txt
+find ./ -name "rm.??.rfMRI_REST?_??_{REGRESSION}.????????-????-????-????-????????????.cmap.Schaefer2018_7Nws_200.1D" >> N17_outputs_to_delete.txt
+
+sed -i -e 's/^/rm /' N17_outputs_to_delete.txt
+sh ./N17_outputs_to_delete.txt
+rm ./N17_outputs_to_delete.txt
+```
+'''
+md("%s"%(text.format(REGRESSION=REGRESSION)))
 
 # > ## Run the jobs
 # ```bash
@@ -167,7 +161,7 @@ for eye_condition in ['EC','EO']:
             num_missing_files += 1
 print('++ INFO: Total number of missing files = %d' % num_missing_files)
 
-for suffix in [REGRESSION]:
+for suffix in ['BASIC']:
     for group in ['EC','EO']:   
         files = glob.glob(osp.join(DATA_DIR,'??????','rfMRI_REST?_??','rm.{group}.rfMRI_REST?_??_{suffix}.????????-????-????-????-????????????.Zcmap.nii'.format(group=group,suffix=suffix)))
         print('++ INFO: [%s,%s] = %d' % (group,suffix,len(files)))
@@ -193,6 +187,12 @@ for suffix in [REGRESSION]:
 #
 # > According to the AFNI people, the NIFTI format should only use the 4th dimension for time. When dealing with non-timeseries, the extra dimensions should be in 5th dim. This is not followed by nilearn, which causes the data not to be loaded properly. See https://afni.nimh.nih.gov/afni/community/board/read.php?1,89081,89081#msg-89081. To solve this issue, we run the 3dTcat command to transform the 3dbucket into a time-series (e.g. only 4D), so that we can load it and present it with nilearn here.
 
+zmap_files = {}
+for segment_type in ['EC','EO']:
+    zmap_files[segment_type] = [osp.join(DATA_DIR,row['Run'].split('_',1)[0],row['Run'].split('_',1)[1],
+                                'rm.{stype}.{run}_{reg}.{suuid}.Zcmap.nii'.format(run=row['Run'].split('_',1)[1],reg=REGRESSION,suuid=row['Segment_UUID'],stype=segment_type))  for r,row in Scan_Segments[segment_type].iterrows()]
+    print('++ Info[%s]: Number of Zcampfiles is %s' % (segment_type,len(zmap_files[segment_type])))
+
 # %%time
 mask_path = osp.join(ALL_DIR,'ROI.ALL.FB.mPP.mask.nii.gz')
 command_file = open('./N17_Commands.{ss}.sh'.format(ss=scan_selection),'w+')
@@ -200,8 +200,8 @@ command_file = open('./N17_Commands.{ss}.sh'.format(ss=scan_selection),'w+')
 # =============================================
 for suffix in  [REGRESSION]:
     print(suffix)
-    EC_files = glob.glob(osp.join(DATA_DIR,'??????','rfMRI_REST?_??','rm.{group}.rfMRI_REST?_??_{suffix}.????????-????-????-????-????????????.Zcmap.nii'.format(group='EC',suffix=suffix)))
-    EO_files = glob.glob(osp.join(DATA_DIR,'??????','rfMRI_REST?_??','rm.{group}.rfMRI_REST?_??_{suffix}.????????-????-????-????-????????????.Zcmap.nii'.format(group='EO',suffix=suffix)))
+    #EC_files = glob.glob(osp.join(DATA_DIR,'??????','rfMRI_REST?_??','rm.{group}.rfMRI_REST?_??_{suffix}.????????-????-????-????-????????????.Zcmap.nii'.format(group='EC',suffix=suffix)))
+    #EO_files = glob.glob(osp.join(DATA_DIR,'??????','rfMRI_REST?_??','rm.{group}.rfMRI_REST?_??_{suffix}.????????-????-????-????-????????????.Zcmap.nii'.format(group='EO',suffix=suffix)))
     out_file = 'ECvsEO_{suffix}.{REGION}.corrmap.TTEST.{ss}.nii.gz'.format(suffix=suffix, REGION=REGION, ss=scan_selection)
     out_path = osp.join(ALL_DIR,out_file)
     out_file2 = 'ECvsEO_{suffix}.{REGION}.corrmap.TTEST.{ss}.nilearn.nii.gz'.format(suffix=suffix, REGION=REGION, ss=scan_selection)
@@ -209,8 +209,8 @@ for suffix in  [REGRESSION]:
     command_file.write('# ++ INFO: Generating output for [%s] --> %s\n' % (suffix,out_path))
     command  = 'module load afni\ncd {all_dir}\n3dttest++ -overwrite -mask {mpath} -labelA EC -labelB EO -overwrite -setA {ec_files} -setB {eo_files} -prefix {opath} -unpooled\n'.format(mpath    = mask_path,
                                                                                                                                                                    all_dir = ALL_DIR,
-                                                                                                                                                                   ec_files = ' '.join(EC_files),
-                                                                                                                                                                   eo_files =' '.join(EO_files),
+                                                                                                                                                                   ec_files = ' '.join(zmap_files['EC']),
+                                                                                                                                                                   eo_files =' '.join(zmap_files['EO']),
                                                                                                                                                                    opath    = out_file)
     command_file.write(command)
     command_file.write('# + Running 3dttest+ command....\n')
@@ -285,13 +285,13 @@ afni -DAFNI_IMAGE_LABEL_MODE=1 -DAFNI_IMAGE_LABEL_SIZE=4 -com "OPEN_WINDOW A.axi
      
 afni -DAFNI_IMAGE_LABEL_MODE=1 -DAFNI_IMAGE_LABEL_SIZE=4 -com "OPEN_WINDOW A.axialimage mont=10x1:18" -com "CLOSE_WINDOW A.coronalimage" \\
      -com "SWITCH_UNDERLAY T1w_restore_brain.MEAN.abox.nii.gz" -com "SWITCH_OVERLAY ECvsEO_{REGRESSION}.{REGION}.corrmap.TTEST.{ss}.nii.gz" -com "SET_SUBBRICKS A 0 2 2" \\
-     -com "SET_THRESHNEW A 0.2 *" -com "SET_PBAR_ALL A.-99 0.4 Reds_and_Blues_Inv" -com "SET_XHAIRS A.OFF" -com "SET_FUNC_BOXED A.On" -com "SET_FUNC_ALPHA A.On" \\
+     -com "SET_THRESHNEW A 0.3 *" -com "SET_PBAR_ALL A.-99 0.6 Reds_and_Blues_Inv" -com "SET_XHAIRS A.OFF" -com "SET_FUNC_BOXED A.On" -com "SET_FUNC_ALPHA A.On" \\
      -com "SAVE_PNG A.axialimage /data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EC_Axial.{ss}.png" \\
      -com "SAVE_PNG A.sagittalimage /data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EC_Sagittal.{ss}.png" -com "QUITT"
      
 afni -DAFNI_IMAGE_LABEL_MODE=1 -DAFNI_IMAGE_LABEL_SIZE=4 -com "OPEN_WINDOW A.axialimage mont=10x1:18" -com "CLOSE_WINDOW A.coronalimage" \\
      -com "SWITCH_UNDERLAY T1w_restore_brain.MEAN.abox.nii.gz" -com "SWITCH_OVERLAY ECvsEO_{REGRESSION}.{REGION}.corrmap.TTEST.{ss}.nii.gz" -com "SET_SUBBRICKS A 0 4 4" \\
-     -com "SET_THRESHNEW A 0.2 *" -com "SET_PBAR_ALL A.-99 0.4 Reds_and_Blues_Inv" -com "SET_XHAIRS A.OFF" -com "SET_FUNC_BOXED A.On" -com "SET_FUNC_ALPHA A.On" \\
+     -com "SET_THRESHNEW A 0.3 *" -com "SET_PBAR_ALL A.-99 0.6 Reds_and_Blues_Inv" -com "SET_XHAIRS A.OFF" -com "SET_FUNC_BOXED A.On" -com "SET_FUNC_ALPHA A.On" \\
      -com "SAVE_PNG A.axialimage /data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EO_Axial.{ss}.png" \\
      -com "SAVE_PNG A.sagittalimage /data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EO_Sagittal.{ss}.png" -com "QUITT"
 ```'''.format(REGION=REGION, REGRESSION=REGRESSION, ss=scan_selection)
@@ -325,12 +325,12 @@ fb_correlations_eo.hvplot.kde(alpha=0.5, xlim=(-0.6,.6),
 # ***
 # # Combine all Panels to Generate Figure 7
 
-Fig07_BrainMaps = pn.Row(pn.Column(pn.Row(pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EC_Axial.{ss}.png'.format(ss=scan_selection), height=200),
-                 pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EC_Sagittal.{ss}.png'.format(ss=scan_selection), height=200)),
-          pn.Row(pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EO_Axial.{ss}.png'.format(ss=scan_selection), height=200),
-                 pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EO_Sagittal.{ss}.png'.format(ss=scan_selection), height=200)),
-          pn.Row(pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_ECvsEO_Axial.{ss}.png'.format(ss=scan_selection), height=200),
-                 pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_ECvsEO_Sagittal.{ss}.png'.format(ss=scan_selection), height=200))),
+Fig07_BrainMaps = pn.Row(pn.Column(pn.Row(pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EC_Axial.{ss}.png'.format(ss=scan_selection), height=160),
+                 pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EC_Sagittal.{ss}.png'.format(ss=scan_selection), height=160)),
+          pn.Row(pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EO_Axial.{ss}.png'.format(ss=scan_selection), height=160),
+                 pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_EO_Sagittal.{ss}.png'.format(ss=scan_selection), height=160)),
+          pn.Row(pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_ECvsEO_Axial.{ss}.png'.format(ss=scan_selection), height=160),
+                 pn.pane.PNG('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks/images/Fig07_ECvsEO_Sagittal.{ss}.png'.format(ss=scan_selection), height=160))),
           fig07_PanelC)
 Fig07_BrainMaps.save('./figures/Fig07_BrainMaps.{ss}.png'.format(ss=scan_selection))
 
