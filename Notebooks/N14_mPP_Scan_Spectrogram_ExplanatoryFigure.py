@@ -120,6 +120,6 @@ axes[2].set_ylabel('Avg. PSD \n(a.u./Hz)')
 axes[2].legend(['Avg. PSD in Sleep Band [0.03 - 0.07 Hz]','Avg. PSD in Control Frequency Band [0.1 - 0.2Hz]','$PSD_{sleep}$','$PSD_{control}$'])
 # -
 
-fig.savefig('./figures/Fig03_PSDexplanation.{region}.png'.format(region=region))
+fig.savefig('./figures/Revision1_SuppFigure04.{region}.png'.format(region=region))
 
 
