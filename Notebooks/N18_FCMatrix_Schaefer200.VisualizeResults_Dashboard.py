@@ -99,8 +99,8 @@ print('++ [noHRa] GS-Based Grouping   : Awake = %d, Drowsy = %d' %(len(GS_Groups
 print('++')
 print('++ [All] PSD-Based Grouping    : Awake = %d, Drowsy = %d' %(len(PSD_Groups['all']['Awake']),len(PSD_Groups['all']['Drowsy'])))
 print('++ [noHRa] PSD-Based Grouping  : Awake = %d, Drowsy = %d' %(len(PSD_Groups['noHRa']['Awake']),len(PSD_Groups['noHRa']['Drowsy'])))
-# -
 
+# + [markdown] tags=[]
 # # Generate FC Matrices
 #
 # ### Load ROI Names, and create labels and locations for matrix display
