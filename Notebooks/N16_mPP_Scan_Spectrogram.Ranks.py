@@ -39,6 +39,7 @@ import hvplot.pandas
 import panel as pn
 
 from scipy.stats import ttest_ind
+from IPython.display import Markdown as md
 
 # %matplotlib inline
 # -
@@ -94,7 +95,7 @@ else:
     Manuscript_Runs = get_available_runs(when='final', type='all')
     Awake_Runs      = get_available_runs(when='final', type='awake')
     Drowsy_Runs     = get_available_runs(when='final', type='drowsy')
-print('++ INFO: Number of Runs: Total = %d | Awake = %d | Drowsy = %d' % (len(Manuscript_Runs), len(Awake_Runs), len(Drowsy_Runs)))
+print('++ INFO [ %s ]: Number of Runs: Total = %d | Awake = %d | Drowsy = %d' % (scenario,len(Manuscript_Runs), len(Awake_Runs), len(Drowsy_Runs)))
 
 # + [markdown] tags=[]
 # ***
@@ -163,7 +164,7 @@ fig_ranked_scans = scans_rank.sort_values(by='PSDsleep', ascending=False).hvplot
                                                                             color='Scan Type', 
                                                                             cmap={'Drowsy':'lightblue','Awake':'orange'}, 
                                                                             hover_cols=['index'], size=20, width=800, line_width=0, legend='top_right',
-                                                                            title='(A) Scans ranked by PSDsleep of fMRI signal from the 4th Ventricle',
+                                                                            title='(A) Scans ranked by PSDsleep',
                                                                             fontsize={'minor_ticks':14, 'ticks':14, 'title':16, 'labels':14, 'legend':14}).opts(toolbar=None)
 fig_ranked_scans
 
@@ -185,6 +186,8 @@ fig_rank_segments_total      = df_plot.hvplot.bar(title='(C) Number of Scans per
                                              cmap={'Drowsy':'lightblue','Awake':'orange'}, 
                                              ylabel='Number of Scans', xlabel='Rank Segments').opts(toolbar=None)
 fig_rank_segments_total
+
+
 
 # Next, we generate a bar graph with one bar per scan colored by scan type and sorted according to the rank based on GS (Full brain)
 
@@ -219,9 +222,12 @@ fig_gs_rank_segments_total
 figure10 = pn.Column(pn.Row(fig_ranked_scans,fig_gs_ranked_scans),
           pn.Row(fig_rank_segments_total,fig_gs_rank_segments_total))
 
-figure10.save('./figures/Fig10_ScanRakings.{region}.{scenario}.png'.format(region=region, scenario=scenario))
-
 figure10
+
+figure10.save('./figures/Revision1_Figure15.{region}.{scenario}.png'.format(region=region, scenario=scenario))
+
+text="![](./figures/Revision1_Figure15.{region}.{scenario}.png)".format(region=region, scenario=scenario)
+md("%s"%text)
 
 # ## Save the list of scans on the top and bottom 100 for both GS and PSD, so we can use those later on N13 to look for network differences
 
@@ -305,5 +311,13 @@ Figure09 = pn.Column(pn.Row(Fig09_panelA,Fig09_panelB),
 Figure09
 
 Figure09.save('./figures/Fig09_StatDiff_PSDsleep_GSamplitude.{region}.{scenario}.png'.format(region=region, scenario=scenario))
+
+scans_rank
+
+plot = scans_rank.hvplot.scatter(x='PSDsleep',y='GSamplitude', aspect='square', c='k', s=3, fontsize={'title':16,'ylabel':14, 'xlabel':14, 'xticks':14, 'yticks':14}).opts(toolbar=None)
+pn.pane.HoloViews(plot).save('./figures/Revision1_SuppFigure08.png')
+
+text="![](./figures/Revision1_SuppFigure08.png)"
+md(text)
 
 
