@@ -46,7 +46,7 @@ import matplotlib.ticker as ticker
 
 region='V4lt_grp'
 suffix='mPP'
-remove_runs_with_HR_alias = False
+remove_HRa_scans = True
 
 # # Spectral Analysis for iFV - whole run - Figure
 #
@@ -63,17 +63,23 @@ print('++ INFO: Number of Drowsy Runs = %d' % len(Drowsy_Runs))
 #
 # Run this cell if you want to reproduce Figure 5, but after removing all scans with an aliased HR falling inside the sleep band
 
-if remove_runs_with_HR_alias:
+# +
+# %%time
+if remove_HRa_scans:
+    scan_selection  = 'noHRa'
     scan_HR_info    = pd.read_csv(osp.join(Resources_Dir,'HR_scaninfo.csv'), index_col=0)
     scan_HR_info    = scan_HR_info[(scan_HR_info['HR_aliased']< 0.03) | (scan_HR_info['HR_aliased']> 0.07)]
     Manuscript_Runs = list(scan_HR_info.index)
     Awake_Runs      = list(scan_HR_info[scan_HR_info['Scan Type']=='Awake'].index)
     Drowsy_Runs     = list(scan_HR_info[scan_HR_info['Scan Type']=='Drowsy'].index)
-    print('++ INFO: Number of Runs = %d' % len(Manuscript_Runs))
-    print('++ INFO: Number of Awake  Runs = %d' % len(Awake_Runs))
-    print('++ INFO: Number of Drowsy Runs = %d' % len(Drowsy_Runs))
 else:
-    print('++ INFO: No runs removed.... check above if you want to remove runs with aliased HR')
+    scan_selection  = 'all'
+    Manuscript_Runs = get_available_runs(when='final', type='all')
+    Awake_Runs      = get_available_runs(when='final', type='awake')
+    Drowsy_Runs     = get_available_runs(when='final', type='drowsy')
+
+print('++ INFO: Number of Runs: Total = %d | Awake = %d | Drowsy = %d' % (len(Manuscript_Runs), len(Awake_Runs), len(Drowsy_Runs)))
+# -
 
 # ###  Load the Periodograms
 
@@ -94,7 +100,7 @@ print(peridiograms_df.shape)
 # ### Prepare the data so that we can plot it with Seaborn (get confidence intervals)
 
 stacked_data = pd.DataFrame(peridiograms_df.stack()).reset_index()
-stacked_data.columns  = ['Frequency','Run','PSD (a.u./Hz)']
+stacked_data.columns  = ['Frequency [Hz]','Run','PSD (a.u./Hz)']
 stacked_data['Scan Type'] = 'N/A' 
 stacked_data.loc[(stacked_data['Run'].isin(Awake_Runs),'Scan Type')]  = 'Awake'
 stacked_data.loc[(stacked_data['Run'].isin(Drowsy_Runs),'Scan Type')] = 'Drowsy'
@@ -122,7 +128,7 @@ list02 = [r for r in Manuscript_Runs if r not in list01]
 
 random_stacked_data = {}
 df          = pd.DataFrame(peridiograms_df.stack()).reset_index()
-df.columns  = ['Frequency','Run','PSD (a.u./Hz)']
+df.columns  = ['Frequency [Hz]','Run','PSD (a.u./Hz)']
 df['Scan Type'] = 'N/A' 
 df.loc[(df['Run'].isin(list01),'Scan Type')]  = 'Random Type 01'
 df.loc[(df['Run'].isin(list02),'Scan Type')] = 'Random Type 02'
@@ -146,7 +152,7 @@ sns.set_style("whitegrid",{"xtick.major.size": 0.1,
 fig, axs   = plt.subplots(1,2,figsize=(20,5))
 # Plot Real Data
 sns.lineplot(data=stacked_data[stacked_data['Scan Type'].isin(['Awake','Drowsy'])], 
-             x='Frequency', 
+             x='Frequency [Hz]', 
              hue='Scan Type', hue_order=['Drowsy','Awake'],
              y='PSD (a.u./Hz)', estimator=np.mean, n_boot=100, ax=axs[0])
 axs[0].set_title('Power Spectral Density (Scan Level)')
@@ -156,7 +162,7 @@ axs[0].set_ylim([0,90])
 axs[0].xaxis.set_major_locator(ticker.MultipleLocator(0.05))
 # Plot Randomized Data
 sns.lineplot(data=random_stacked_data[random_stacked_data['Scan Type'].isin(['Random Type 01','Random Type 02'])], 
-             x='Frequency', 
+             x='Frequency [Hz]', 
              hue='Scan Type', hue_order=['Random Type 01','Random Type 02'],
              y='PSD (a.u./Hz)', estimator=np.mean, n_boot=100, ax=axs[1])
 axs[1].set_title('Power Spectral Density (Scan Level - Randomized Labels)')
@@ -173,11 +179,6 @@ for i,f in enumerate(peridiograms_df.index):
 
 fig
 
-# ### 6. Save Figures to disk
-
-# + tags=[]
-fig.savefig('./figures/Fig05_PanelA.png')
-# -
 # **Same as above, but with logarithmic scale**
 
 sns.set(font_scale=1.5)
@@ -186,10 +187,10 @@ sns.set_style("whitegrid",{"xtick.major.size": 0.1,
 fig, axs   = plt.subplots(1,2,figsize=(20,5))
 # Plot Real Data
 sns.lineplot(data=stacked_data[stacked_data['Scan Type'].isin(['Awake','Drowsy'])], 
-             x='Frequency', 
+             x='Frequency [Hz]', 
              hue='Scan Type', hue_order=['Drowsy','Awake'],
              y='PSD (a.u./Hz)', estimator=np.mean, n_boot=100, ax=axs[0])
-axs[0].set_title('Power Spectral Density (Scan Level)')
+axs[0].set_title('Power Spectral Density')
 axs[0].legend(ncol=1, loc='upper right')
 axs[0].plot(peridiograms_df.index,kw_tests['Bonf_sign'],'k*',lw=1)
 axs[0].set_ylim([0,90])
@@ -197,7 +198,7 @@ axs[0].xaxis.set_major_locator(ticker.MultipleLocator(0.05))
 axs[0].set(xscale="log")
 # Plot Randomized Data
 sns.lineplot(data=random_stacked_data[random_stacked_data['Scan Type'].isin(['Random Type 01','Random Type 02'])], 
-             x='Frequency', 
+             x='Frequency [Hz]', 
              hue='Scan Type', hue_order=['Random Type 01','Random Type 02'],
              y='PSD (a.u./Hz)', estimator=np.mean, n_boot=100, ax=axs[1])
 axs[1].set_title('Power Spectral Density (Scan Level - Randomized Labels)')
@@ -209,5 +210,7 @@ axs[1].set(xscale="log")
 
 
 fig
+
+fig.savefig('./figures/Revision1_Figure9_PanelA.{ss}.png'.format(ss=scan_selection))
 
 
