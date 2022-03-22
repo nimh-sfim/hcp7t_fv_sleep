@@ -58,16 +58,18 @@ SCALING     = 'density'     # Scaling method
 DETREND     = 'constant'    # Type of detrending
 FS          = 1             # 1/TR (in Hertzs)
 NACQ        = 890           # Number of time-points
-ONLY_NOTaliased_HR = False
+remove_HRa_scans = False
 
 # # Loading and selecting Scan segments of interest
 
 Scan_Segments = {}
-if ONLY_NOTaliased_HR:
+if remove_HRa_scans:
+    scan_selection = 'all'
     segment_HR_info = pd.read_csv(osp.join(Resources_Dir,'HR_segmentinfo.csv'), index_col=0)
     Scan_Segments['EC'] = segment_HR_info[((segment_HR_info['HR aliased']<0.03) | (segment_HR_info['HR aliased']>0.07)) & (segment_HR_info['Type']=='EC')]
     Scan_Segments['EO'] = segment_HR_info[((segment_HR_info['HR aliased']<0.03) | (segment_HR_info['HR aliased']>0.07)) & (segment_HR_info['Type']=='EO')]
 else:
+    scan_selection = 'noHRa'
     Scan_Segments['EC'] = load_segments('EC',min_dur=60)
     Scan_Segments['EO'] = load_segments('EO',min_dur=60)
 num_EC = Scan_Segments['EC'].shape[0]
@@ -107,7 +109,7 @@ Scan_Segments_Peridiograms['EC'].head()
 
 # ## Save Peridiograms to Disk
 
-if not ONLY_NOTaliased_HR:
+if not remove_HRa_scans:
     print("++ Writing peridiograms to disk")
     Scan_Segments_Peridiograms['EC'].to_pickle(osp.join(Resources_Dir,'ET_Peridiograms_perSegments_EC.{region}.pkl'.format(region=REGION)))
     Scan_Segments_Peridiograms['EO'].to_pickle(osp.join(Resources_Dir,'ET_Peridiograms_perSegments_EO.{region}.pkl'.format(region=REGION)))
@@ -118,10 +120,10 @@ if not ONLY_NOTaliased_HR:
 
 sns.set(font_scale=2)
 df_EC                 = Scan_Segments_Peridiograms['EC'].stack().reset_index()
-df_EC.columns         = ['Frequency','Run','PSD (a.u./Hz)']
+df_EC.columns         = ['Frequency [Hz]','Run','PSD (a.u./Hz)']
 df_EC['Segment Type'] = 'Eyes Closed'
 df_EO                 = Scan_Segments_Peridiograms['EO'].stack().reset_index()
-df_EO.columns         = ['Frequency','Run','PSD (a.u./Hz)']
+df_EO.columns         = ['Frequency [Hz]','Run','PSD (a.u./Hz)']
 df_EO['Segment Type'] = 'Eyes Open'
 df_todraw             = pd.concat([df_EO,df_EC])
 
@@ -161,7 +163,7 @@ for f in welch_freqs:
 
 df_random_todraw  = pd.concat([Scan_Segments_Peridiograms['EC'],Scan_Segments_Peridiograms['EO']],axis=1)
 df_random_todraw  = df_random_todraw.stack().reset_index()
-df_random_todraw.columns  = ['Frequency','Run','PSD (a.u./Hz)']
+df_random_todraw.columns  = ['Frequency [Hz]','Run','PSD (a.u./Hz)']
 df_random_todraw['Segment Type'] = 'N/A'
 df_random_todraw.loc[(df_random_todraw['Run'].isin(list01),'Segment Type')] = 'Random Type 01'
 df_random_todraw.loc[(df_random_todraw['Run'].isin(list02),'Segment Type')] = 'Random Type 02'
@@ -174,16 +176,16 @@ sns.set_style("whitegrid",{"xtick.major.size": 0.1,
     "xtick.minor.size": 0.05,'grid.linestyle': '--'})
 fig, axs   = plt.subplots(1,2,figsize=(20,5))
 sns.lineplot(data=df_todraw, 
-             x='Frequency', 
+             x='Frequency [Hz]', 
              hue='Segment Type', hue_order=['Eyes Closed', 'Eyes Open'],
              y='PSD (a.u./Hz)', estimator=np.mean, n_boot=100, ax=axs[0])
-axs[0].set_title('Power Spectral Density (Segment Level)')
+axs[0].set_title('Power Spectral Density')
 axs[0].legend(ncol=1, loc='upper right')
 axs[0].plot(welch_freqs,kw_tests['Bonf_sign'],'k*',lw=5)
 axs[0].set_ylim([0,90])
 axs[0].xaxis.set_major_locator(ticker.MultipleLocator(0.05))
 sns.lineplot(data=df_random_todraw, 
-             x='Frequency', 
+             x='Frequency [Hz]', 
              hue='Segment Type', hue_order=['Random Type 01', 'Random Type 02'],
              y='PSD (a.u./Hz)', estimator=np.mean, n_boot=100, ax=axs[1])
 axs[1].set_title('Power Spectral Density (Segment Level - Randomized Labels)')
@@ -200,27 +202,22 @@ for i,f in enumerate(df_all_segments.index):
 
 fig
 
-# ### 6. Save Figures to disk
-
-# + tags=[]
-fig.savefig('./figures/Fig05_PanelB.png')
-# -
 sns.set(font_scale=1.5)
 sns.set_style("whitegrid",{"xtick.major.size": 0.1,
     "xtick.minor.size": 0.05,'grid.linestyle': '--'})
 fig, axs   = plt.subplots(1,2,figsize=(20,5))
 sns.lineplot(data=df_todraw, 
-             x='Frequency', 
+             x='Frequency [Hz]', 
              hue='Segment Type', hue_order=['Eyes Closed', 'Eyes Open'],
              y='PSD (a.u./Hz)', estimator=np.mean, n_boot=100, ax=axs[0])
-axs[0].set_title('Power Spectral Density (Segment Level)')
+axs[0].set_title('Power Spectral Density')
 axs[0].legend(ncol=1, loc='upper right')
 axs[0].plot(welch_freqs,kw_tests['Bonf_sign'],'k*',lw=5)
 axs[0].set_ylim([0,90])
 axs[0].xaxis.set_major_locator(ticker.MultipleLocator(0.05))
 axs[0].set(xscale="log")
 sns.lineplot(data=df_random_todraw, 
-             x='Frequency', 
+             x='Frequency [Hz]', 
              hue='Segment Type', hue_order=['Random Type 01', 'Random Type 02'],
              y='PSD (a.u./Hz)', estimator=np.mean, n_boot=100, ax=axs[1])
 axs[1].set_title('Power Spectral Density (Segment Level - Randomized Labels)')
@@ -230,6 +227,8 @@ axs[1].set_ylim([0,90])
 axs[1].xaxis.set_major_locator(ticker.MultipleLocator(0.05))
 axs[1].set(xscale="log")
 fig
+
+fig.savefig('./figures/Revision1_Figure9_PanelB.{ss}.png'.format(ss=scan_selection))
 
 
 
