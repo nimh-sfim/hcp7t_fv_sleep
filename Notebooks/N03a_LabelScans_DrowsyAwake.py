@@ -41,7 +41,6 @@
 # * ```./Notebooks/images/extramaterials02_ECdistribution.png```:  un-published figure. distribution of EC durations in relation to 60s threshold
 # * ```./Notebooks/images/extramaterials03_EOdistribution```: un-published figure. distribution of EO durations in relation to 60s threshold
 
-# +
 import os
 import pandas as pd
 import numpy  as np
@@ -57,9 +56,8 @@ import panel as pn
 import uuid
 import random
 from scipy.stats import ttest_ind, mannwhitneyu
-
+from IPython.display import Markdown as md
 sns.set(font_scale=2)
-# -
 
 # ***
 # ## 1. Read Fully Pre-processed ET data into memory
@@ -177,9 +175,10 @@ FIG1_PANELSCD = (ET_PupilSize_Proc_1Hz_COPY[sample_awake].hvplot(width=1400, hei
 
 FIGURE1 = pn.Column(pn.Row(FIG1_PANELA,FIG1_PANELB),FIG1_PANELSCD)
 
-FIGURE1.save('./figures/Figure01_ScanGroups.png')
+FIGURE1.save('./figures/Revision1_Figure01.png')
 
-# ![](./figures/Figure01_ScanGroups.png)
+text="![](./figures/Revision1_Figure01.png)"
+md("%s"%(text))
 
 # ***
 # ## 5. Explore significan differences in motion across scan types
@@ -193,11 +192,11 @@ ttest_ind(mean_fd[mean_fd['Scan Type']=='Awake']['Mean_FD'],mean_fd[mean_fd['Sca
 mannwhitneyu(mean_fd[mean_fd['Scan Type']=='Awake']['Mean_FD'],mean_fd[mean_fd['Scan Type']=='Drowsy']['Mean_FD'], alternative='two-sided')
 
 # ***
-# ## 6. Create Figure 6
+# ## 6. Create Figure 3
 #
 # Although we expect subjects to close their eyes at different times, previous research suggests that we should still see a trend in which as scanning progresses, a larger number of subjects will have their eyes closed at a given TR. This is the result of more, and more subjects falling sleep as scanning progresses.
 #
-# Figure 4 shows that such is indeed the case for the 7T HCP resting-state sample
+# Figure 3 shows that such is indeed the case for the 7T HCP resting-state sample
 #
 # > At this point we remove from the memory copy of ET_PupilSize_Proc_1Hz any run that does not fall under the definition of "awake" or "drowsy"
 
@@ -209,7 +208,7 @@ sns.set(font_scale=1.2, style='whitegrid', font='sans-serif')
 
 # Compute the percent of runs with eyes closed per TR
 
-FIGURE4, ax        = plt.subplots(1,1,figsize=(10,5))
+FIGURE3, ax        = plt.subplots(1,1,figsize=(10,5))
 df             = pd.DataFrame(100*ET_PupilSize_Proc_1Hz.isna().sum(axis=1)/ET_PupilSize_Proc_1Hz.shape[1], columns=['% Runs with eyes closed'])
 df['Time [s]'] = df.index.total_seconds()
 # Plot the results as a scatter plot and also a linear fit
@@ -218,18 +217,18 @@ ax.set_ylim(0,60)
 # Compute correlation for the linear fit
 r,p = pearsonr(df['Time [s]'],df['% Runs with eyes closed'])
 # Add correlation value as an annotation to the figure
-props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+props = dict(boxstyle='round', facecolor='white', alpha=0.5)
 plt.text(705, 25,'R = %0.2f' %(r), bbox=props)
 # Add title to figure
 ax.set_title('Percentage of Runs with Eyes Closed at a given TR', fontdict={'size':22})
 # Save figure to disk
-FIGURE4.savefig('./figures/Figure04_runsECperTR.png')
+FIGURE3.savefig('./figures/Revision1_Figure03.png')
 # Remove temporary variables
 del df
 # -
 
 print('++ INFO: Correlation between scan time & subjects with eyes closed: R = %0.2f (p = %f)' %(r,p))
-FIGURE4
+FIGURE3
 
 # ***
 # ## 7. Identify individual periods of EO and EC
