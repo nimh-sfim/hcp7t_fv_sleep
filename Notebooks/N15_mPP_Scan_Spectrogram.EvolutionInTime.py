@@ -52,7 +52,7 @@ sns.set_style("whitegrid",{"xtick.major.size": 0.1,
 region             = 'V4lt_grp' # Use the Group-Level FV ROI
 gs_region          = 'GM'       # Region used to define the global signal (options='GM','FB')
 gs_step            = 'mPP'      # Options: 'mPP','Reference','Basic','Basicpp','Behzadi_COMPCOR','Behzadi_COMPCORpp' | Manuscript: 'mPP'
-remove_overlap_HR  = False      # If true, do analyses after removing scans with overlapping alisaed HR in the sleep band
+remove_HRa_scans  = False      # If true, do analyses after removing scans with overlapping alisaed HR in the sleep band
 spectrogram_windur = 60         # Spectrogram Window Duration (In seconds)
 Nacq               = 890        # Number of acquisitions
 
@@ -82,7 +82,7 @@ print(windowed_time_index[0:10])
 
 # +
 # %%time
-if remove_overlap_HR:
+if remove_HRa_scans:
     scenario        = 'noHRa'
     scan_HR_info    = pd.read_csv(osp.join(Resources_Dir,'HR_scaninfo.csv'), index_col=0)
     scan_HR_info    = scan_HR_info[(scan_HR_info['HR_aliased']< 0.03) | (scan_HR_info['HR_aliased']> 0.07)]
@@ -165,11 +165,11 @@ df_plot = pd.concat([sleep_psd_stacked_DF,ctrol_psd_stacked_DF])
 # ## Plot the data
 
 fig, ax = plt.subplots(2,1,figsize=(30,15))
-sns.lineplot(data=df_plot, x='Time [seconds]', hue='Scan Type', y='PSD', style='Frequency Band', style_order=['Sleep (0.03 - 0.07 Hz)','Control (0.1 - 0.2 Hz)'], estimator=np.mean, n_boot=100, ax=ax[0])
+sns.lineplot(data=df_plot, x='Time [seconds]', hue='Scan Type', y='PSD', style='Frequency Band', style_order=['Sleep (0.03 - 0.07 Hz)','Control (0.1 - 0.2 Hz)'], estimator=np.mean, n_boot=1000, ax=ax[0])
 ax[0].set_xlim(df_plot['Time [seconds]'].min(),df_plot['Time [seconds]'].max())
-ax[0].set_title('(A) Average PSD in 4th ventricle for the two bands of interest')
-sns.lineplot(data=df_cum_plot, x='Time [seconds]', hue='Scan Type', y='PSD', style='Frequency Band', style_order=['Sleep (0.03 - 0.07 Hz)','Control (0.1 - 0.2 Hz)'], estimator=np.mean, n_boot=100, ax=ax[1])
-ax[1].set_title('(A) Average Cumulative PSD in 4th ventricle for the two bands of interest')
+ax[0].set_title('(A) Average PSD in iFV for the two bands of interest')
+sns.lineplot(data=df_cum_plot, x='Time [seconds]', hue='Scan Type', y='PSD', style='Frequency Band', style_order=['Sleep (0.03 - 0.07 Hz)','Control (0.1 - 0.2 Hz)'], estimator=np.mean, n_boot=1000, ax=ax[1])
+ax[1].set_title('(A) Average Cumulative PSD in iFV for the two bands of interest')
 ax[1].set_xlim(df_cum_plot['Time [seconds]'].min(),df_cum_plot['Time [seconds]'].max())
 ax[1].legend(ncol=2)
 
@@ -177,4 +177,6 @@ ax[1].legend(ncol=2)
 #
 # > **<u>FINDING:</u>**: As scanning progresses, we see a differentiation in terms of cumulative PSD between subjects who kept their eyes open continously and those who did not. The second group tends to have a higher cumulative PSD at longer scanning times. By looking at cumulative PSD we overcome the limitation mentioned above, and the differentiation across groups becomes more evident
 
-fig.savefig('./figures/Fig06_PSDacrossTime.{region}.{scenario}.png'.format(region=region,scenario=scenario))
+fig.savefig('./figures/Revision1_Figure07.{region}.{scenario}.png'.format(region=region,scenario=scenario))
+
+
