@@ -37,40 +37,40 @@ echo " +   Discard Volumes relative to mPP = ${VOLS_DISCARD} acquisitions"
 echo " +   POLORT = ${POLORT} polynomials"
 echo " +   Bluring FWHM = ${BLUR_FWHM} mm"
 
-## # (2) Spatially Smooth mPP data
-## # =============================
-## echo "++ INFO: (2) Spatially Smooth mPP data"
-## echo "++ ==================================="
-## if [ ! -e ./${RUN}_mPP.blur.nii.gz ]; then
-##    3dBlurInMask -overwrite                                     \
-##                 -mask ../ROI.FB.mPP.nii.gz                     \
-##                 -FWHM ${BLUR_FWHM}                             \
-##                 -input ./${RUN}_mPP.nii.gz[${VOLS_DISCARD}..$] \
-##                 -prefix ./${RUN}_mPP.blur.nii.gz
-## 
-##    nifti_tool -strip_extras -overwrite -infiles ${RUN}_mPP.blur.nii.gz
-## else
-##    echo "++ WARNING: Blur file already exists. Not generating it again."
-## fi
-## 
-## # (3) Create SPC version of the blurred data
-## # ==========================================
-## echo "++ INFO: (3) Create SPC version of the blurred data"
-## echo "++ ================================================"
-## if [ ! -e ${RUN}_mPP.blur.scale.nii.gz ]; then
-##    3dTstat -overwrite -mean -mask ../ROI.FB.mPP.nii.gz -prefix ${RUN}_mPP.MEAN.nii.gz ${RUN}_mPP.blur.nii.gz
-##    3dcalc -overwrite                                  \
-##        -a ${RUN}_mPP.blur.nii.gz                      \
-##        -b ${RUN}_mPP.MEAN.nii.gz                      \
-##        -c ../ROI.FB.mPP.nii.gz                        \
-##        -expr  'c * min(200, a/b*100)*step(a)*step(b)' \
-##        -prefix ${RUN}_mPP.blur.scale.nii.gz
-## 
-##    nifti_tool -strip_extras -overwrite -infiles ${RUN}_mPP.blur.scale.nii.gz
-## else
-##    echo "++ WARNING: Blur.Scale file already exists. Not generating it again."
-## fi
-## 
+# (2) Spatially Smooth mPP data
+# =============================
+echo "++ INFO: (2) Spatially Smooth mPP data"
+echo "++ ==================================="
+if [ ! -e ./${RUN}_mPP.blur.nii.gz ]; then
+   3dBlurInMask -overwrite                                     \
+                -mask ../ROI.FB.mPP.nii.gz                     \
+                -FWHM ${BLUR_FWHM}                             \
+                -input ./${RUN}_mPP.nii.gz[${VOLS_DISCARD}..$] \
+                -prefix ./${RUN}_mPP.blur.nii.gz
+
+   nifti_tool -strip_extras -overwrite -infiles ${RUN}_mPP.blur.nii.gz
+else
+   echo "++ WARNING: Blur file already exists. Not generating it again."
+fi
+
+# (3) Create SPC version of the blurred data
+# ==========================================
+echo "++ INFO: (3) Create SPC version of the blurred data"
+echo "++ ================================================"
+if [ ! -e ${RUN}_mPP.blur.scale.nii.gz ]; then
+   3dTstat -overwrite -mean -mask ../ROI.FB.mPP.nii.gz -prefix ${RUN}_mPP.MEAN.nii.gz ${RUN}_mPP.blur.nii.gz
+   3dcalc -overwrite                                  \
+       -a ${RUN}_mPP.blur.nii.gz                      \
+       -b ${RUN}_mPP.MEAN.nii.gz                      \
+       -c ../ROI.FB.mPP.nii.gz                        \
+       -expr  'c * min(200, a/b*100)*step(a)*step(b)' \
+       -prefix ${RUN}_mPP.blur.scale.nii.gz
+
+   nifti_tool -strip_extras -overwrite -infiles ${RUN}_mPP.blur.scale.nii.gz
+else
+   echo "++ WARNING: Blur.Scale file already exists. Not generating it again."
+fi
+
 # (4) Extract Representative Timseries for scale.blur 
 # -----------------------------------------------------
 echo "++ INFO: (4) Extract Representative Timseries"
@@ -143,9 +143,9 @@ rm rm.det_pcin_${RUN}.nii.gz
 # ================ Run different pre-processing pipelines (post mPP) ===================== #
 # ======================================================================================== #
 
-# (8) Create Reference for comparison of denoising strategies
+# (8) Create Smoothing for comparison of denoising strategies
 # ===========================================================
-echo "++ INFO: (8) Reference Pre-processing"
+echo "++ INFO: (8) Smoothing Pre-processing"
 echo "++ =================================="
 3dTproject -overwrite                                          \
            -mask   ../ROI.FB.mPP.nii.gz                        \
