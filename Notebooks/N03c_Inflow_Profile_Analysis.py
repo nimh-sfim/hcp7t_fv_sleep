@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.12.0
+#       jupytext_version: 1.9.1
 #   kernelspec:
 #     display_name: hcp7t_fv_sleep_env
 #     language: python
@@ -296,7 +296,7 @@ slice_timing_pd.plot.scatter(x='Slice Number',y='Slice Time', ax=axs, s=100, mar
 axs.set_xlabel('Slice Number', fontsize=16)
 axs.set_ylabel('Slice Timing [ms]', fontsize=16)
 for r,row in slice_timing_pd.iterrows():
-    axs.annotate('S'+str(int(row['Slice Number'])).zfill(2),(row['Slice Number']-3,row['Slice Time']-12), fontsize=12)
+    axs.annotate('s'+str(int(row['Slice Number'])).zfill(2),(row['Slice Number']-3.5,row['Slice Time']-12), fontsize=16)
 for (bot_sl,top_sl) in [(1,15),(0,32),(17,49),(34,66),(51,83),(68,84)]:
     x0 = bot_sl
     x1 = top_sl
