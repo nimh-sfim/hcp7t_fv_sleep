@@ -208,9 +208,24 @@ echo "==========================================================="
 3dTstat -overwrite -stdev -prefix ${RUN}_BASIC.VAR.nii.gz ${RUN}_BASIC.nii.gz
 3dcalc  -overwrite -a ${RUN}_BASIC.VAR.nii.gz -expr 'a*a' -prefix ${RUN}_BASIC.VAR.nii.gz 
 
-# (10) Basic Pre-processing - No Filtering
+# (10) GSR Pre-processing (only used in the connectivity analyses)
+# ================================================================
+echo "++ INFO: (10) GSR Pre-processing"
+echo "++ =============================="
+3dTproject -overwrite                                          \
+           -mask   ../ROI.FB.mPP.nii.gz                        \
+           -input  ${RUN}_mPP.blur.scale.nii.gz                \
+           -polort ${POLORT}                                   \
+           -ort    ${RUN}_Movement_Regressors_dt.discard10.txt \
+           -ort    ${RUN}_Bandpass_Regressors.txt              \
+           -ort    ${RUN}_mPP.Signal.GM.1D                     \
+           -prefix ${RUN}_GSR.nii.gz
+echo " + OUTPUT from Basic Pipeline: ${RUN}_GSR.nii.gz"
+echo " FINISHED CORRECTLY"
+
+# (11) Basic Pre-processing - No Filtering
 # =========================================
-echo "++ INFO: (10) Basic Pre-processing (no filtering - input to rapidtide)"
+echo "++ INFO: (11) Basic Pre-processing (no filtering - input to rapidtide)"
 echo "++ =================================================================="
 3dTproject -overwrite                                          \
            -mask   ../ROI.FB.mPP.nii.gz                        \
@@ -220,9 +235,9 @@ echo "++ =================================================================="
            -prefix ${RUN}_BASICnobpf.nii.gz
 echo " + OUTPUT from Basic Pipeline (no filtering): ${RUN}_BASICnobpf.nii.gz"
 
-# (11) Behzadi CompCor Pipeline
+# (12) Behzadi CompCor Pipeline
 # =============================
-echo "++ INFO: (11) Behzadi CompCorr Pre-processing"
+echo "++ INFO: (12) Behzadi CompCorr Pre-processing"
 echo "++ =========================================="
 3dTproject -overwrite                                           \
            -mask   ../ROI.FB.mPP.nii.gz                         \
@@ -234,8 +249,8 @@ echo "++ =========================================="
            -prefix ${RUN}_Behzadi_COMPCOR.nii.gz
 echo " + OUTPUT from Behzadi CompCor: ${RUN}_Behzadi_COMPCOR.nii.gz"
 
-# (11.1) Extract Representative Timseries for BASIC
-echo "++ INFO: (11.1) Extract Representative Timseries"
+# (12.1) Extract Representative Timseries for BASIC
+echo "++ INFO: (12.1) Extract Representative Timseries"
 echo "================================================"
 for items in ${ROI_FV_PATH},'V4_grp' ${ROI_FVlt_PATH},'V4lt_grp' ${ROI_FVut_PATH},'V4ut_grp' ../ROI.V4_e.mPP.nii.gz,'V4_e' ../ROI.Vl_e.mPP.nii.gz,'Vl_e' ../ROI.GM.mPP.nii.gz,'GM' ../ROI.FB.mPP.nii.gz,'FB' ../ROI.WM_e.mPP.nii.gz,'WM_e'
 do 
@@ -249,15 +264,17 @@ do
 done
 
 # 11.2 Compute variance for COMPCOR
-echo "++ INFO (11.2) Compute variance for output of COMPCOR pipeline"
+echo "++ INFO (12.2) Compute variance for output of COMPCOR pipeline"
 echo "=============================================================="
 3dTstat -overwrite -stdev -prefix ${RUN}_COMPCOR.VAR.nii.gz ${RUN}_Behzadi_COMPCOR.nii.gz
 3dcalc  -overwrite -a ${RUN}_COMPCOR.VAR.nii.gz -expr 'a*a' -prefix ${RUN}_COMPCOR.VAR.nii.gz 
 
-echo "++ INFO: (12) Maps of correlation between the different pre-processing"
+echo "++ INFO: (13) Maps of correlation between the different pre-processing"
 echo "++ ==================================================================="
 3dTcorrelate -overwrite -prefix ${RUN}_BASIC_2_Reference.nii.gz   ${RUN}_BASIC.nii.gz ${RUN}_Reference.nii.gz
 3dTcorrelate -overwrite -prefix ${RUN}_COMPCOR_2_Reference.nii.gz ${RUN}_Behzadi_COMPCOR.nii.gz ${RUN}_Reference.nii.gz
+
+
 
 echo "=================================="
 echo "++ INFO: Script finished correctly"
