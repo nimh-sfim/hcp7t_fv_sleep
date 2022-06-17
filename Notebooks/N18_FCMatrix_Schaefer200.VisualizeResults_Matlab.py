@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.12.0
+#       jupytext_version: 1.9.1
 #   kernelspec:
 #     display_name: hcp7t_fv_sleep_env
 #     language: python
@@ -160,7 +160,7 @@ for scan_selection in ['all','noHRa']:
 # %%time
 # Create files with Z-scored connectivity matrices for their use in NBS
 # =====================================================================
-for suffix in ['Reference', 'BASIC', 'BASICpp', 'Behzadi_COMPCOR', 'Behzadi_COMPCORpp']:
+for suffix in ['Reference', 'GSR','BASIC', 'BASICpp', 'Behzadi_COMPCOR', 'Behzadi_COMPCORpp']:
     for scan_selection in ['all','noHRa']:
         cc_matrix_xr = xr.DataArray(dims=['Run','ROI_x','ROI_y'], coords={'Run':Manuscript_Runs[scan_selection],'ROI_x':roi_info_df['ROI_Name'],'ROI_y':roi_info_df['ROI_Name']})
         # Load all the connectivity matrices for all subjects
