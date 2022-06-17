@@ -182,3 +182,18 @@ df.to_pickle(QA1_Results_DF_Path)
 
 print('++ INFO: Number of runs missing ET files = %d RUNS' % (df[df['ET Avail']==False].shape[0]))
 print('++ INFO: Number of runs with ET files available but unreadable = %d RUNS' % (df[df['ET_OK']==False].shape[0]))
+
+# ***
+#
+# ### Clean up space
+#
+# Scans that will not be used becuase the ET is not available will be removed from disk
+
+df = pd.read_pickle(QA1_Results_DF_Path)
+
+df = df[df['ET Avail']==False]
+
+command_file = open('./N01_QA_RemoveScansWithBadET.sh','w+')
+for r,row in df.iterrows():
+    command_file.write('rm -rf /data/SFIMJGC_HCP7T/HCP7T/{sbj}/{run} \n'.format(sbj=row['Sbj'],run=row['Run']))
+command_file.close()
