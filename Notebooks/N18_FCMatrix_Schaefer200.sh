@@ -7,8 +7,7 @@ cd /data/SFIMJGC_HCP7T/HCP7T/${SBJ}/${RUN}/
 echo "++ Working Dir: `pwd`"
 # Compute Connectivity Matrix (without regressing the signal)
 # ===========================================================
-
-for REGRESSION in Reference BASIC BASICpp Behzadi_COMPCOR Behzadi_COMPCORpp 
+for REGRESSION in Reference BASIC GSR BASICpp Behzadi_COMPCOR Behzadi_COMPCORpp
 do
     echo "++ INFO: Extracting Full Brain Connectivity Matrix for ${RUN}_${REGRESSION}.nii.gz"
     3dNetCorr -overwrite \
