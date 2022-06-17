@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.12.0
+#       jupytext_version: 1.9.1
 #   kernelspec:
 #     display_name: hcp7t_fv_sleep_env
 #     language: python
@@ -166,7 +166,7 @@ net_data  = dict(start=net_ends[:-1],
                 start_event=-4*np.ones(14),
                 end_event=-4*np.ones(14),
                 net_names=net_names)
-hm_data  = dict(start=[0,100],end=[100,200],start_event=[-4,-4],end_event=[-4,-4],hm_names=['LH','RH'])
+hm_data  = dict(start=[0,97],end=[100,195],start_event=[-4,-4],end_event=[-4,-4],hm_names=['LH','RH'])
 
 Nrois = roi_info_df.shape[0]
 print('++ INFO: Number of ROIs: %d' % Nrois)
@@ -177,7 +177,7 @@ print('++ INFO: Number of ROIs: %d' % Nrois)
 
 # %%time
 Z_matrix = {}
-for suffix in ['Reference', 'BASIC', 'BASICpp', 'Behzadi_COMPCOR', 'Behzadi_COMPCORpp']:
+for suffix in ['Reference', 'GSR', 'BASIC', 'BASICpp', 'Behzadi_COMPCOR', 'Behzadi_COMPCORpp']:
     cc_matrix_xr = xr.DataArray(dims=['Run','ROI_x','ROI_y'], coords={'Run':Manuscript_Runs['all'],'ROI_x':roi_info_df['ROI_Name'],'ROI_y':roi_info_df['ROI_Name']})
     # Load all the connectivity matrices for all subjects
     for i,item in enumerate(Manuscript_Runs['all']):
@@ -197,7 +197,7 @@ for suffix in ['Reference', 'BASIC', 'BASICpp', 'Behzadi_COMPCOR', 'Behzadi_COMP
 
 # %%time
 Mean_CCs     = {}
-for suffix in ['Reference', 'BASIC', 'BASICpp', 'Behzadi_COMPCOR', 'Behzadi_COMPCORpp']:
+for suffix in ['Reference', 'GSR', 'BASIC', 'BASICpp', 'Behzadi_COMPCOR', 'Behzadi_COMPCORpp']:
     for group_criteria,groups in zip(['ET','PSD','GS'],[ET_Groups,PSD_Groups,GS_Groups]):
         for scan_selection in ['all','noHRa']:
             # Compute average FC matrix per run type
@@ -215,10 +215,11 @@ for suffix in ['Reference', 'BASIC', 'BASICpp', 'Behzadi_COMPCOR', 'Behzadi_COMP
 # +
 preprocessing_labels={'Reference': 'mPP + Drifts + Bandpass',
                       'BASIC':     'mPP + Motion + Drifts + Bandpass',
+                      'GSR':       ' BASIC + Global Signal Regression',
                       'BASICpp':   'mPP + Motion + Drifts + Bandpass + Lagged iFV',
                       'Behzadi_COMPCOR':'mPP + Motion + Drifts + Bandpass + 5PCAs from vents and WM',
                       'Behzadi_COMPCORpp':'mPP + Motion + Drifts + Bandpass + 5PCAs from vents and WM + Lagged iFV'}
-select_preprocessing = pn.widgets.Select(name='Pre-processing', options=['Reference','BASIC', 'BASICpp','Behzadi_COMPCOR','Behzadi_COMPCORpp'], 
+select_preprocessing = pn.widgets.Select(name='Pre-processing', options=['Reference','GSR','BASIC', 'BASICpp','Behzadi_COMPCOR','Behzadi_COMPCORpp'], 
                                          value='Reference')
 
 select_grouping      = pn.widgets.Select(name='Group Creation', options=['ET','GS','PSD'], value='ET')
@@ -323,253 +324,73 @@ data_dashboard_server = data_dashboard.show(port=port_tunnel,open=False)
 
 data_dashboard_server.stop()
 
-# + [markdown] tags=[]
 # ***
 #
-# # Statistical Analyses for FC using NBS
+# ## Supplementary Figure for the GSR pipeline
 #
-# To find statistical differences in FC between scan types, we will rely on the NBS software (https://www.nitrc.org/projects/nbs). 
+# During the last round of reviews we were asked to add results for the FC analyses using also global signal regression. These analyses are reported as an additional supplementary figure.
 #
-# Results from those analyses will then be plotted as 3D network graphs using BrainNetViewer (https://www.nitrc.org/projects/bnv/)
+# The top panels of the figure are screenshots from the data_dashboard initiated above, which now will also include the option to show results for the GSR scenario.
 #
-# NBS needs FC matrices in a very particular format (and organized in a particular way). In addition, it needs desigh matrices describing which matrices belong to each group. The following cells will generate all necessary files
-#
-# ### Generate Design Matrices for NBS 
-#
-# Here we generate 3 matrices, one per scan gropings. As mentioned above, we only report resutls for scan groups based on ET data. The other two resutls were for explorative purposes.
-# -
+# The code below generated the lower panel of such supplementary figure.
 
-# Create the design matrices
-# ==========================
-ET_DMatrix  = np.vstack([np.tile(np.array([0,1]),(len(ET_Groups['Awake']),1)),np.tile(np.array([1,0]),(len(ET_Groups['Drowsy']),1))])
-np.savetxt(osp.join(Resources_Dir,'NBS_ET_DesingMatrix.txt'),ET_DMatrix,delimiter=' ',fmt='%d')
-GS_DMatrix  = np.vstack([np.tile(np.array([0,1]),(len(GS_Groups['Awake']),1)),np.tile(np.array([1,0]),(len(GS_Groups['Drowsy']),1))])
-np.savetxt(osp.join(Resources_Dir,'NBS_GS_DesingMatrix.txt'),GS_DMatrix,delimiter=' ',fmt='%d')
-PSD_DMatrix = np.vstack([np.tile(np.array([0,1]),(len(PSD_Groups['Awake']),1)),np.tile(np.array([1,0]),(len(PSD_Groups['Drowsy']),1))])
-np.savetxt(osp.join(Resources_Dir,'NBS_PSD_DesingMatrix.txt'),PSD_DMatrix,delimiter=' ',fmt='%d')
+# Load and store in memory the outputs from NBS for all different preprocessing scenarios
+Diff_matrix={} # This dictionary will hold the combiantion of both contrasts (AgtD as 1s and DgtA as -1s)
+AgtD_matrix={} # This dictionary will hold the AgtD results
+DgtA_matrix={} # This dictionary will hold the DgtA results
+for pipeline,pipeline_label in zip(['Reference', 'GSR', 'BASIC', 'BASICpp', 'COMPCOR', 'COMPCORpp'],
+                                   ['Smoothing', 'GSR', 'Basic', 'Basic+', 'CompCor', 'CompCor+']):
+    AgtD_path = osp.join(Resources_Dir+'_NBS','NBS_ET_Results','NBS_ET_{pp}_AgtD.edge'.format(pp=pipeline))
+    DgtA_path = osp.join(Resources_Dir+'_NBS','NBS_ET_Results','NBS_ET_{pp}_DgtA.edge'.format(pp=pipeline))
+    AgtD_matrix[pipeline_label] = np.loadtxt(AgtD_path)[::-1]
+    DgtA_matrix[pipeline_label] = np.loadtxt(DgtA_path)[::-1]
+    Diff_matrix[pipeline_label] = AgtD_matrix[pipeline_label] - DgtA_matrix[pipeline_label]
 
-# ### Make copies of FC matrices on Resources folder that follow NBS requirements for data organization
-#
-# Here we will:
-#
-# * Generate individual folders for each pre-processing pipeline and group selection method --> We will have a total of 12 folders (4 pre-processing pipelines X 3 scan groupings)
-#
-# * Inside each folder, we will make copies of the connectivity matrices. Those copied will be named simply as subject???.txt --> This allows automatic loading of files in NBS
+layout = None
+for pp in ['Smoothing','Basic', 'CompCor', 'CompCor+','GSR']:
+    mat = hv.Image(Diff_matrix[pp], bounds=(0,0,Nrois,Nrois)).opts(clim=(-2,2), cmap=['lightblue','white','orange'], aspect='square', frame_width=400, 
+                                                                                              title=pp, fontsize={'ticks':12, 'title':16}, 
+                                                                                              xlabel='', ylabel='',
+                                                                                              colorbar=False, xaxis=None, yaxis=None).opts(toolbar=None)
+    net_segments_y = hv.Segments(net_data, 
+                             [hv.Dimension('start_event',range=(-8,Nrois)), 
+                              hv.Dimension('start',range=(-8,Nrois)),'end_event', 'end']
+                             ,'net_names').opts(color='net_names',line_width=10, cmap=nw_color_map,show_legend=False)
+    hm_segments_x = hv.Segments(hm_data, 
+                             [hv.Dimension('start',range=(-8,Nrois)), 
+                              hv.Dimension('start_event',range=(-8,Nrois)),'end', 'end_event']
+                             ,'hm_names').opts(color='hm_names',line_width=10, cmap=hm_color_map,show_legend=False)
+    if layout is None:
+        layout = mat * net_segments_y * hm_segments_x
+    else:
+        layout = layout + (mat * net_segments_y * hm_segments_x)
 
-# %%time
-# Create files with Z-scored connectivity matrices for their use in NBS
-# =====================================================================
-for suffix in ['BASIC', 'Behzadi_COMPCOR', 'AFNI_COMPCOR', 'AFNI_COMPCORp']:
-    cc_matrix_xr = xr.DataArray(dims=['Run','ROI_x','ROI_y'], coords={'Run':Manuscript_Runs,'ROI_x':roi_info_df['ROI_Name'],'ROI_y':roi_info_df['ROI_Name']})
-    # Load all the connectivity matrices for all subjects
-    for i,item in enumerate(Manuscript_Runs):
-        sbj,run  = item.split('_',1)
-        path     = osp.join(DATA_DIR,sbj,run,'{run}_{suffix}.Shaeffer2018_200Parcels_000.netcc'.format(run=run,suffix=suffix))
-        aux_cc_r = pd.read_csv(path,sep='\t',comment='#', header=1)
-        # Convert R to Fisher Z-score as we will be computing the mean in the next cell
-        aux_cc_Z = aux_cc_r.apply(np.arctanh)
-        np.fill_diagonal(aux_cc_Z.values,1)
-        cc_matrix_xr.loc[item,:,:] = aux_cc_Z
-    # Save files to disk
-    for sbj_lists,target_dir_prefix in zip([ET_Groups,    PSD_Groups,    GS_Groups],
-                                           ['NBS_ET_Data','NBS_PSD_Data','NBS_GS_Data']):
-        target_dir = osp.join(Resources_Dir,target_dir_prefix+'_'+suffix)
-        if osp.exists(target_dir):
-            rmtree(target_dir)
-        os.mkdir(target_dir)
-        print("++ INFO: Working on %s" % target_dir)
-        for r,item in enumerate(sbj_lists['Awake']):
-            sbj,run   = item.split('_',1)
-            dest_path = osp.join(Resources_Dir,target_dir,'subject{id}.txt'.format(id=str(r+1).zfill(3)))
-            np.savetxt(dest_path,cc_matrix_xr.loc[item,:,:],delimiter=' ',fmt='%f')
-        for s,item in enumerate(sbj_lists['Drowsy']):
-            sbj,run   = item.split('_',1)
-            dest_path = osp.join(Resources_Dir,target_dir,'subject{id}.txt'.format(id=str(r+1+s+1).zfill(3)))    
-            np.savetxt(dest_path,cc_matrix_xr.loc[item,:,:],delimiter=' ',fmt='%f')
-        del r,s,item
-    del cc_matrix_xr
+layout.cols(5)
 
-# ### Run Statistical Analyses in MATLAB / NBS
-#
-# These analyses were conducted using NBS v1.2 on MATLAB 2019a. 
-#
-# To run the analysis, do the following:
-#
-# 1. Connect to a spersist node via NoMachine or VNC
-#
-# 2. Open a terminal and enter the project folder
-#
-# ```bash
-# # cd /data/SFIMJGC_HCP7T/hcp7T_fv_sleep/
-# ```
-#
-# 3. Load the matlab module and start matlab
-#
-# ```bash
-# module load matlab/2019a
-# matlab
-# ```
-#
-# 4. Add NBS to the MATLAB path.
-#
-# ```matlab
-# addpath(genpath('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep_extraSW/NBS1.2/'))
-# ```
-#
-# 5. Start NBS
-#
-# ```matlab
-# NBS
-# ```
-#
-# 6. Configure NBS for a particular scenario
-#
-#     See detailed instructions for each case on the following cells
-#     
-# 7. Save the results to disk using the File --> Save Current
+# Given the number of connections that show significant differences in the GSR scenario is too big, it is not easy to see specific patterns of change being discussed. For that reason we have to additional panels in the
+# supplementary figure that show connections stronger for Awake than Drowsy within the DMN and whithin the different attention networks. The next two cells create files with this information that can subsequently be loaded
+# into BrainNetView to generate those two sub-panels.
 
-# #### ET-based Groups, Behzadi_COMPCOR, Awake > Drowsy
-#
-# * Design Matrix: ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_ET_DesingMatrix.txt```
-# * Constrast: [-1,1]
-# * Statistical Test: T-test
-# * Threshold: 3.1
-# * Connectivity Matrices: ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_ET_Data_Behzadi/COMPCOR/subject0001.txt```
-# * Node Coordinates: ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_Node_Coordinates.txt```
-# * Node LAbesl: ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_Node_Labels.txt```
-# * Exchange Blocks: EMPTY
-# * Permutations: 5000
-# * Significance: 0.05
-# * Method: Network-Based Statistics
-# * Component Size: Extent
-#
-# Once analyses are completed, please save as ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_ET_Results/NBS_ET_Behzadi_COMPCOR_AgtD.mat```
-# ![](./images/NBS_ET_Bezhadi_COMCOR_AgtD.configuration.png)
+M = pd.DataFrame(AgtD_matrix['GSR']).copy()
+M.index = roi_info_df['Node_ID']
+M.columns = roi_info_df['Node_ID']
+for i in M.index:
+    for j in M.columns:
+        if not('Default' in i) or not('Default' in j):
+            M.loc[i,j] = 0
+M.to_csv('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources_NBS/NBS_ET_Results/GSR_DMN_Map.edge',sep=' ', header=None,index=None)
 
-# #### ET-based Groups, Behzadi_COMPCOR, Drowsy > Awake
-#
-# * Design Matrix: ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_ET_DesingMatrix.txt```
-# * Constrast: [1,-1]
-# * Statistical Test: T-test
-# * Threshold: 3.1
-# * Connectivity Matrices: ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_ET_Data_Behzadi/COMPCOR/subject0001.txt```
-# * Node Coordinates: LEAVE EMPTY TO AVOID MEMORY ISSUES DURING FINAL PLOTTING
-# * Node LAbesl: ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_Node_Labels.txt```
-# * Exchange Blocks: EMPTY
-# * Permutations: 5000
-# * Significance: 0.05
-# * Method: Network-Based Statistics
-# * Component Size: Extent
-#
-# Once analyses are completed, please save as ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_ET_Results/NBS_ET_Behzadi_COMPCOR_DgtA.mat```
-# ![](./images/NBS_ET_Bezhadi_COMCOR_DgtA.configuration.png)
-
-# Similarly, equivalent results can be generated for the other pre-processing scenarios, by selecteding the corresponding folder in the "Connectivity Matrices" field. 
+M = pd.DataFrame(AgtD_matrix['GSR']).copy()
+M.index = roi_info_df['Node_ID']
+M.columns = roi_info_df['Node_ID']
+for i in M.index:
+    for j in M.columns:
+        if not('Attn' in i) or not('Attn' in j):
+            M.loc[i,j] = 0
+M.to_csv('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources_NBS/NBS_ET_Results/GSR_Attn_Map.edge',sep=' ', header=None,index=None)
 
 # ***
-# # Draw Statistically Significant Differences in Connectivity using BrainNetViewer
-#
-# ### Install BrainNetViewer
-#
-# For this step, we will use the BrainNetViewer (https://www.nitrc.org/projects/bnv/) software that runs on MATLAB. 
-#
-# 1. Connect to biowulf spersist node using NoMachine or VNC
-#
-# 2. Download the MATLAB version of BrainNetViewer (Version 1.7 Release 20191031) into /data/SFIMJGC_HCP7T/hcp7t_fv_sleep_extraSW/
-#
-# 3. Unzip the downloaded file in /data/SFIMJGC_HCP7T/hcp7t_fv_sleep_extraSW/BrainNetViewer
-#
-# ```bash
-# # cd /data/SFIMJGC_HCP7T/hcp7t_fv_sleep_extraSW/
-# # mkdir BrainNetViewer
-# # mv ~/Downloads/BrainNetViewer_20191031.zip /data/SFIMJGC_HCP7T/hcp7t_fv_sleep_extraSW/BrainNetViewer
-# # cd /data/SFIMJGC_HCP7T/hcp7t_fv_sleep_extraSW/BrainNetViewer
-# unzip BrainNetViewer_20191031.zip
-# # rm BrainNetViewer_20191031.zip
-# ```
-#
-# 4. Start MATLAB
-#
-# ```bash
-# # cd /data/SFIMJGC_HCP7T/hcp7t_fv_sleep
-# module load matlab/2019a
-# matlab
-# ```
-#
-# 5. Add the path to BrainNetViewer in MATLAB's command window
-#
-# ```matlab
-# addpath('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep_extraSW/BrainNetViewer')
-# ```
-#
-# 6. Start BrainNetViewer
-#
-# ```matlab
-# BrainNet
-# ```
-#
-
-# ### Convert NBS Ouputs to BrainNetViewer format
-#
-# We have generated a small MATLAB script that will take as input the saved results from a given NBS analysis and will write out an ```.edge``` file to be loaded into BrainNetViewer.
-#
-# This script will also print to the screen the number of signficantly different connections for each scenario. We use that information when composing the manuscript figure.
-#
-# 1. Start MATLAB
-#
-# ```bash
-# # cd /data/SFIMJGC_HCP7T/hcp7t_fv_sleep
-# module load matlab/2019a
-# matlab
-# ```
-#
-# 2. Enter the Notbook folder on the MATLAB console
-#
-# ```matlab
-# # cd /data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Notebooks
-# ```
-#
-# 3. Run ```N12_FCMatrix_NBS2BrainViewer.m``` on the MATLAB console
-#
-# ```matlab
-# N12_FCMatrix_NBS2BrainViewer.m
-# ```
-
-# ### Plot Results
-#
-# 1. Start MATLAB
-#
-# ```bash
-# # cd /data/SFIMJGC_HCP7T/hcp7t_fv_sleep
-# module load matlab/2019a
-# matlab
-# ```
-#
-# 2. Add BrainNetViewer to the path
-#
-# ```matlab
-# addpath('/data/SFIMJGC_HCP7T/hcp7t_fv_sleep_extraSW/BrainNetViewer')
-# ```
-#
-# 3. Start BrainNetViewer
-#
-# ```matlab
-# BrainNet
-# ```
-#
-# 4. Select "File --> Load File"
-#
-#     * Surface File: ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep_extraSW/BrainNetViewer/Data/SurfTemplate/BrainMesh_ICBM152.nv```
-#     * Data File (nodes): ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/BrainNet_Nodes.node```
-#     * Data File (edges): ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_ET_Results/NBS_ET_Behzadi_COMPCOR_AgtD.edge``` (This one will vary depending on which results you want to plot)
-#     * Mapping: Leave Empty
-#     
-# 5. Press OK
-#
-# 6. On the BrainNet_option dialog that just opened, click Load and select ```/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources/NBS_ET_Results/BrainNet_Options_SchaeferColors.mat```
-#
-# 7. Click Apply
-#
-# This should result in a figure similar to this (depending on which data you are loading)
-#
-# ![](./images/NBS_SampleResult.png)
+# ***
+# ### END OF NOTEBOOK
+# ***
+# ***
