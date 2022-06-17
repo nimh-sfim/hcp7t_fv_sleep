@@ -178,13 +178,15 @@ df.sample(5)
 # -
 
 fig,ax = plt.subplots(1,1,figsize=(12,5))
-sns.set(font_scale=1.5)
+sns.set(font_scale=2)
 plot = sns.boxplot(data=df,x='Pipeline',hue='Type',y='Amplitude', order=['Minimal','Smoothing','Smoothing+','Basic','Basic+','CompCor','CompCor+'], hue_order=['EC','EO'], width=.3)
+plot.set_ylabel('$\mathregular{GM_{amplitude}}$')
 plot.xaxis.set_tick_params(rotation=45)
 
 fig,ax = plt.subplots(1,1,figsize=(3,5))
-sns.set(font_scale=1.5)
+sns.set(font_scale=2)
 plot = sns.boxplot(data=df,x='Pipeline',hue='Type',y='Amplitude', order=['iFV'], hue_order=['EC','EO'], width=.3)
+plot.set_ylabel('$\mathregular{iFV_{amplitude}}$')
 ax.get_legend().remove()
 plot.xaxis.set_tick_params(rotation=45)
 
