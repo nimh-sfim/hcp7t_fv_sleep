@@ -2,7 +2,7 @@
 %  ========================================================
 clear all
 RESOURCES_DIR="/data/SFIMJGC_HCP7T/hcp7t_fv_sleep/Resources_NBS/";
-scenarios=["Reference", "BASIC", "BASICpp", "COMPCOR","COMPCORpp"];
+scenarios=["Reference", "GSR", "BASIC", "BASICpp", "COMPCOR","COMPCORpp"];
 contrasts=["AgtD","DgtA"];
 for scenario = scenarios
     for contrast = contrasts
