@@ -1,3 +1,4 @@
+ToDelete/
 Resources/
 .ipynb_checkpoints/
 Notebooks/.ipynb_checkpoints/
@@ -20,3 +21,17 @@ Notebooks/N12_mPP_CorrMaps_Segments.SWARM.sh
 Notebooks/N12_Commands.sh
 Notebooks/N13_FCMatrix_Schaefer200.logs/
 Notebooks/N13_FCMatrix_Schaefer200.SWARM.sh
+Notebooks/images/*
+Notebooks/figures/Review*
+Resources_NBS/NBS_ET_Data_*
+Resources_NBS/NBS_GS_Data_*
+Resources_NBS/NBS_PSD_Data_*
+Resources_NBS/NBS_ET_DesingMatrix.all.txt
+Resources_NBS/NBS_ET_DesingMatrix.noHRa.txt
+Resources_NBS/NBS_ET_Results/
+Resources_NBS/NBS_GS_DesingMatrix.all.txt
+Resources_NBS/NBS_GS_DesingMatrix.noHRa.txt
+Resources_NBS/NBS_PSD_DesingMatrix.all.txt
+Resources_NBS/NBS_PSD_DesingMatrix.noHRa.txt
+Notebooks/*.logs
+Notebooks/*SWARM.sh
