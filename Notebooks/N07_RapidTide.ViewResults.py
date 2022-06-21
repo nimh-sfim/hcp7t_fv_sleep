@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.12.0
+#       jupytext_version: 1.9.1
 #   kernelspec:
 #     display_name: hcp7t_fv_sleep_env
 #     language: python
@@ -413,82 +413,3 @@ fig8.save('./figures/Fig08_RapidTide_results.{ss}.png'.format(ss=scan_selection)
 
 text="![](./figures/Fig08_RapidTide_results.{ss}.png)".format(ss=scan_selection)
 md("%s"%(text))
-
-a=pd.read_csv(osp.join(DATA_DIR,'ALL','a.txt'),sep='\t')
-
-b=pd.read_csv(osp.join(DATA_DIR,'ALL','b.txt'),sep='\t')
-
-c=pd.read_csv(osp.join(DATA_DIR,'ALL','c.txt'),sep='\t')
-
-c[[col for col in c.columns if 'Central' in col]]
-
-[c for c in b.columns if 'Frontal' in c]
-
-a[['NZMean_Left Calcarine Gyrus', 'NZMean_Right Calcarine Gyrus','NZMean_Left Thalamus', 'NZMean_Right Thalamus','NZMean_Left Cerebellum (Crus 1)',
- 'NZMean_Right Cerebellum (Crus 1)',
- 'NZMean_Left Cerebellum (Crus 2)',
- 'NZMean_Right Cerebellum (Crus 2)',
- 'NZMean_Left Cerebellum (III)',
- 'NZMean_Right Cerebellum (III)',
- 'NZMean_Left Cerebellum (IV-V)',
- 'NZMean_Right Cerebellum (IV-V)',
- 'NZMean_Left Cerebellum (VI)',
- 'NZMean_Right Cerebellum (VI)',
- 'NZMean_Left Cerebellum (VII)',
- 'NZMean_Right Cerebellum (VII)',
- 'NZMean_Left Cerebellum (VIII)',
- 'NZMean_Right Cerebellum (VIII)',
- 'NZMean_Left Cerebellum (IX)',
- 'NZMean_Right Cerebellum (IX)',
- 'NZMean_Left Cerebellum (X)',
- 'NZMean_Right Cerebellum (X)']]
-
-vis_delay = a[['NZMean_Left Calcarine Gyrus', 'NZMean_Right Calcarine Gyrus']].median(axis=1).values[0]
-
-mot_delay = a[['NZMean_Left Postcentral Gyrus', 'NZMean_Right Postcentral Gyrus']].median(axis=1).values[0]
-
-thal_delay = a[['NZMean_Left Thalamus', 'NZMean_Right Thalamus']].median(axis=1).values[0]
-
-cere_delay = a[['NZMean_Left Cerebellum (Crus 1)','NZMean_Right Cerebellum (Crus 1)','NZMean_Left Cerebellum (Crus 2)','NZMean_Right Cerebellum (Crus 2)','NZMean_Left Cerebellum (III)','NZMean_Right Cerebellum (III)','NZMean_Left Cerebellum (IV-V)','NZMean_Right Cerebellum (IV-V)',
- 'NZMean_Left Cerebellum (VI)','NZMean_Right Cerebellum (VI)','NZMean_Left Cerebellum (VII)','NZMean_Right Cerebellum (VII)','NZMean_Left Cerebellum (VIII)','NZMean_Right Cerebellum (VIII)','NZMean_Left Cerebellum (IX)','NZMean_Right Cerebellum (IX)','NZMean_Left Cerebellum (X)','NZMean_Right Cerebellum (X)']].median(axis=1).values[0]
-
-print(vis_delay,mot_delay,thal_delay,cere_delay)
-
-# +
-thal     = pd.read_csv(osp.join(DATA_DIR,'ALL','Thalamus_lags.1D'),header=None)
-thal_vis = pd.read_csv(osp.join(DATA_DIR,'ALL','Thalamus_Visual_lags.1D'),header=None)
-thal_ss  = pd.read_csv(osp.join(DATA_DIR,'ALL','Thalamus_SS_lags.1D'),header=None)
-vis      = pd.read_csv(osp.join(DATA_DIR,'ALL','Visual_lags.1D'),header=None)
-motor    = pd.read_csv(osp.join(DATA_DIR,'ALL','Motor_lags.1D'),header=None)
-aud      = pd.read_csv(osp.join(DATA_DIR,'ALL','Auditory_lags.1D'),header=None)
-
-cer      = pd.read_csv(osp.join(DATA_DIR,'ALL','Cerebellum_lags.1D'),header=None)
-frontal  = pd.read_csv(osp.join(DATA_DIR,'ALL','Frontal_lags.1D'),header=None)
-# -
-
-aud.hvplot.kde(label='Auditory') * motor.hvplot.kde(label='Motor') * frontal.hvplot.kde(label='Frontal')
-
-thal_vis.hvplot.kde(label='Thalamus:Visual') * vis.hvplot.kde(label='Visual') * cer.hvplot.kde(label='Cerebellum')
-
-thal_vis.hvplot.kde(label='Thalamus:Visual') * thal_ss.hvplot.kde(label='Thalamus:SS') * vis.hvplot.kde(label='Visual') * cer.hvplot.kde(label='Cerebellum') * motor.hvplot.kde(label='Motor') * frontal.hvplot.kde(label='Frontal')
-
-3dROIstats -nomeanout -nzmean -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.all.nii.gz > a.txt
-  796  18:05  afni
-  797  18:13  3dmaskdump -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.
-  798  18:13  3dmaskdump -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.nii.gz 
-  799  18:14  3dmaskdump -mrange 77 78 -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.nii.gz 
-  800  18:14  3dmaskdump -noijk -mrange 77 78 -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.nii.gz 
-  801  18:15  3dmaskdump -nozero -noijk -mrange 77 78 -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.nii.gz 
-  802  18:15  3dmaskdump -nozero -noijk -mrange 77 78 -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.nii.gz > Thalamus_lags.1D
-  803  18:17  3dmaskdump -nozero -noijk -mrange 43 44 -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.nii.gz > Visual_lags.1D
-  804  18:19  3dROIstats -mask MNI_caez_ml_18.nii.gz MNI_caez_ml_18.nii.gz 
-  805  18:20  3dROIstats -mask MNI_caez_ml_18.nii.gz MNI_caez_ml_18.nii.gz > b.txt
-  806  18:22  3dmaskdump -nozero -noijk -mrange 91 108 -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.nii.gz > Cerebellum_lags.1D
-  807  18:24  3dmaskdump -nozero -noijk -mrange 57 58 -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.nii.gz > Motor_lags.1D
-  808  18:27  3dmaskdump -nozero -noijk -mrange 3 4 -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.nii.gz > Frontal_lags.1D
-  809  18:27  wc -l Frontal_lags.1D 
-  810  18:27  3dmaskdump -nozero -noijk -mrange 7 8 -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.nii.gz >> Frontal_lags.1D
-  811  18:27  wc -l Frontal_lags.1D 
-  812  18:28  3dmaskdump -nozero -noijk -mrange 11 16 -mask MNI_caez_ml_18.nii.gz Figure8_LagMaps.nii.gz >> Frontal_lags.1D
-  813  18:35  history
-
