@@ -329,27 +329,49 @@ def load_PSD(runs, band='sleep', region='V4_grp',index=None):
 
 # FUNCTIONS USED FOR EYE TRACKING PRE-PROCESSING
 # ==============================================
-def alt_mean(data):
+def alt_mean(data, pc_missing=None,verbose=False):
     """
-    This function provides an alternative way to compute the mean value for a window, taking into account how many missing points exists.
+    This function provides an alternative ways to compute the mean value for a window, taking into account how many missing points exists.
+   
+    If pc_missing is set to None, then this function will return a nan if any one input point is nan.
     
-    If percentage of missing values is less or equal to pc_missing, then return the mean computed using all available datapoints
+    If pc_missing is set to a value between (0,1), then:
     
-    Conversely, if the percentage of missing values is larger than the threshold, then return np.nan
+      * If percentage of missing values is less or equal to pc_missing, then return the mean computed using all available datapoints
+      * Conversely, if the percentage of missing values is larger than the threshold, then return np.nan
     
     INPUTS:
     data: pandas dataframe with data for a given window
     pc_missing: percentage of missing data
     
     """
-    pc_missing = 0.5
-    l = data.shape[0]
-    n_nans = data.isna().sum()
-    if n_nans <= pc_missing:
-        return data.mean()
+    if (not isinstance(data,pd.Series)):
+       print('++ ERROR: data input is not a pandas object.')
+       return None
+    # Most Restrictive Mode --> As soon as there is one nan, we return nan.
+    # =====================================================================
+    if pc_missing is None:
+       n_nans = data.isna().sum()
+       if n_nans <= 0:
+          return data.mean()
+       else:
+          return np.nan
+    # Percentage-based
+    # ================
     else:
-        return np.nan
-    
+       if (pc_missing <=0) or (pc_missing >=1):
+          print('++ ERROR: pc_missing not valid. Try again')
+          return None
+       else:
+          l = data.shape[0]
+          n_nans = data.isna().sum()
+          if verbose:
+             print('++ INFO [alt_mean]: #points_in_data=%d | #nans=%d | threshold=%.2f points' % (l,n_nans, pc_missing*l))
+          if n_nans <= pc_missing * l:
+             return data.mean()
+          else:
+             return np.nan
+
 def smooth(x,window_len=11,window='hanning'):
     """
     This function was copied from: https://scipy-cookbook.readthedocs.io/items/SignalSmooth.html

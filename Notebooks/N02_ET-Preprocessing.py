@@ -242,8 +242,10 @@ ETinfo_df.info()
 # * ET_PupilSize_Orig_df: original raw ET traces for the final 561 runs
 # * ET_PupilSize_Proc_df: partially pre-processed raw ET traces for the final 561 runs
 
+# + tags=[]
 # Save ET Info Dataframe to disk
 ETinfo_df.to_pickle(ETinfo_path)
+# -
 
 # Save Original ET data to disk
 ET_PupilSize_Orig_df.to_pickle(ET_PupilSize_Orig_path)
@@ -266,19 +268,27 @@ ETinfo_df[ETinfo_df['QA_Onset_Avail']==False]
 #
 # ### Step 6. Upsample to 1Hz
 #
-# Interpolation of ET traces to the temporal resolution of fMRI is not trivial. 
+# Interpolation of ET traces to the temporal resolution of fMRI can be accomplished in different ways. 
 #
-# For example, if we use np.nanmean, then we would be saying that eyes were open for a 1s period in which potentially we may only have 1 out of 1000 samples. That may not always be fair. 
+# For example, if we use np.nanmean, as long as there is one non Nan value in the segment, we will get a valid mean value.
 
 # %%time
 ET_PupilSize_Proc_1Hz       = ET_PupilSize_Proc_df.resample('1s').apply(np.nanmean)
 
-# An alternative (hopefully fairer solution) is to only return a mean value different from np.Nan if at least half of the samples within a given 1 second period exists.
-#
-# This is the interporlation scheme adopted in this work. The previous one is only performed for demonstration purposes
+# Alternatively, we could go to the other end, and only compute the mean if there no missing values in the input segment.
+# > NOTE: This is the interporlation scheme adopted in this work.
 
 # %%time
 ET_PupilSize_Proc_1Hz_B     = ET_PupilSize_Proc_df.resample('1s').apply(alt_mean)
+
+# One other alternative is to only return a mean value different from np.Nan if at least X number of the samples availale (e.g., 50%) within the provided segment.
+
+# %%time
+ET_PupilSize_Proc_1Hz_C     = ET_PupilSize_Proc_df.resample('1s').apply(lambda x: alt_mean(x,pc_missing=0.5))
+
+ET_PupilSize_Proc_1Hz['102816_rfMRI_REST1_PA'].hvplot(label='1 avail -> use', c='k').opts(line_width=10, width=1500, title='Comparison of possible interpolation schemes when upsampling to fMRI sampling rate') * \
+ET_PupilSize_Proc_1Hz_C['102816_rfMRI_REST1_PA'].hvplot(label='50% avail --> use').opts(line_width=5, width=1500)  * \
+ET_PupilSize_Proc_1Hz_B['102816_rfMRI_REST1_PA'].hvplot(label='all avail -> use').opts(line_width=3, width=1500)
 
 ET_PupilSize_Proc_1Hz_B.to_pickle(osp.join(Resources_Dir,'ET_PupilSize_Proc_1Hz.pkl'))
 
@@ -418,6 +428,7 @@ ET_PupilSize_Proc_1Hz_B.to_pickle(osp.join(Resources_Dir,'ET_PupilSize_Proc_1Hz_
 
 # Additionaly, we will also save a copy of the fully pre-processed ET data on each run directory. This time the pickle file will only contain the traces for each particular run separately
 
+# + tags=[]
 # %%time
 for item in ET_PupilSize_Proc_1Hz_B.columns:
     sbj,run  = item.split('_',1)
