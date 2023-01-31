@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.9.1
+#       jupytext_version: 1.12.0
 #   kernelspec:
 #     display_name: hcp7t_fv_sleep_env
 #     language: python
@@ -182,11 +182,11 @@ for suffix in ['Reference', 'GSR','BASIC', 'BASICpp', 'Behzadi_COMPCOR', 'Behzad
             print("++ INFO: Working on %s" % target_dir)
             for r,item in enumerate(sbj_lists['Awake']):
                 sbj,run   = item.split('_',1)
-                dest_path = osp.join(Resources_Dir,target_dir,'subject{id}.txt'.format(id=str(r+1).zfill(3)))
+                dest_path = osp.join(Resources_NBS_Dir,target_dir,'subject{id}.txt'.format(id=str(r+1).zfill(3)))
                 np.savetxt(dest_path,cc_matrix_xr.loc[item,:,:],delimiter=' ',fmt='%f')
             for s,item in enumerate(sbj_lists['Drowsy']):
                 sbj,run   = item.split('_',1)
-                dest_path = osp.join(Resources_Dir,target_dir,'subject{id}.txt'.format(id=str(r+1+s+1).zfill(3)))    
+                dest_path = osp.join(Resources_NBS_Dir,target_dir,'subject{id}.txt'.format(id=str(r+1+s+1).zfill(3)))    
                 np.savetxt(dest_path,cc_matrix_xr.loc[item,:,:],delimiter=' ',fmt='%f')
             del r,s,item
         del cc_matrix_xr
