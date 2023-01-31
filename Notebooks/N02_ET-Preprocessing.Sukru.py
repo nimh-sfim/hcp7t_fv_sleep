@@ -56,6 +56,29 @@ from utils.basics    import get_available_runs, smooth, alt_mean
 from utils.variables import DATA_DIR, Resources_Dir, ETinfo_path, ET_PupilSize_Orig_path, ET_PupilSize_Proc_path
 from utils.variables import ET_Blink_Dur_Thr, ET_Blink_Buffer_NSamples, Ndiscard
 
+
+def alt_mean(data):
+    """
+    This function provides an alternative way to compute the mean value for a window, taking into account how many missing points exists.
+    
+    If percentage of missing values is less or equal to pc_missing, then return the mean computed using all available datapoints
+    
+    Conversely, if the percentage of missing values is larger than the threshold, then return np.nan
+    
+    INPUTS:
+    data: pandas dataframe with data for a given window
+    pc_missing: percentage of missing data
+    
+    """
+    pc_missing = 0.5
+    l = data.shape[0]
+    n_nans = data.isna().sum()
+    if n_nans <= pc_missing * l:
+        return data.mean()
+    else:
+        return np.nan
+
+
 # # 1. Load Results from QA1
 #
 # The runs listed below all have: ET data available, ET data loadable, correct parcellation for the 4th ventricle, correct TR, correct voxel size and correct number of volumes
@@ -250,6 +273,14 @@ ET_PupilSize_Orig_df.to_pickle(ET_PupilSize_Orig_path)
 # Save Pre-processed ET data to disk
 ET_PupilSize_Proc_df.to_pickle(ET_PupilSize_Proc_path)
 
+
+
+ETinfo_df = pd.read_pickle(ETinfo_path)
+ET_PupilSize_Orig_df = pd.read_pickle(ET_PupilSize_Orig_path)
+ET_PupilSize_Proc_df = pd.read_pickle(ET_PupilSize_Proc_path)
+
+
+
 print('++ INFO: ETinfo_df.shape = %s' % str(ETinfo_df.shape))
 print('++ INFO: ET_PupilSize_Orig_df.shape = %s' % str(ET_PupilSize_Orig_df.shape))
 print('++ INFO: ET_PupilSize_Proc_df.shape = %s' % str(ET_PupilSize_Proc_df.shape))
@@ -280,7 +311,7 @@ ET_PupilSize_Proc_1Hz       = ET_PupilSize_Proc_df.resample('1s').apply(np.nanme
 # %%time
 ET_PupilSize_Proc_1Hz_B     = ET_PupilSize_Proc_df.resample('1s').apply(alt_mean)
 
-ET_PupilSize_Proc_1Hz_B.to_pickle(osp.join(Resources_Dir,'ET_PupilSize_Proc_1Hz.pkl'))
+ET_PupilSize_Proc_1Hz_B.to_pickle(osp.join(Resources_Dir,'ET_PupilSize_Proc_1Hz.Sukru.pkl'))
 
 [Nacq, Nruns ]              =  ET_PupilSize_Proc_1Hz_B.shape
 print('++ Number of acquisitions = %d' % Nacq)
@@ -414,7 +445,7 @@ del postcorrection, precorrection
 #
 # First, we will save the timeseries for all the good runs into a single pickle file in the Resources directory
 
-ET_PupilSize_Proc_1Hz_B.to_pickle(osp.join(Resources_Dir,'ET_PupilSize_Proc_1Hz_corrected.pkl'))
+ET_PupilSize_Proc_1Hz_B.to_pickle(osp.join(Resources_Dir,'ET_PupilSize_Proc_1Hz_corrected.Sukru.pkl'))
 
 # Additionaly, we will also save a copy of the fully pre-processed ET data on each run directory. This time the pickle file will only contain the traces for each particular run separately
 
@@ -422,6 +453,8 @@ ET_PupilSize_Proc_1Hz_B.to_pickle(osp.join(Resources_Dir,'ET_PupilSize_Proc_1Hz_
 for item in ET_PupilSize_Proc_1Hz_B.columns:
     sbj,run  = item.split('_',1)
     run_dir  = osp.join(DATA_DIR,sbj,run)
-    out_path = osp.join(run_dir,'.'.join([run,'ET_PupilSize_Preproc_1Hz_corrected','pkl']))
+    out_path = osp.join(run_dir,'.'.join([run,'ET_PupilSize_Preproc_1Hz_corrected','Sukru','pkl']))
     ET_PupilSize_Proc_1Hz_B.to_pickle(out_path)
     print('++ ET File saved [%s]:' % out_path)
+
+
