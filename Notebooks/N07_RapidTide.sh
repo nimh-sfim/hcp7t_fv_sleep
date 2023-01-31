@@ -150,8 +150,6 @@ echo "================================================================"
 3dTstat -overwrite -stdev -prefix ${RUN}_Referencepp.VAR.nii.gz ${RUN}_Referencepp.nii.gz
 3dcalc  -overwrite -a ${RUN}_Referencepp.VAR.nii.gz -expr 'a*a' -prefix ${RUN}_Referencepp.VAR.nii.gz 
 
-exit
-
 # (2) Behzadi CompCor Pipeline + Rapidtide Regressor
 # ==================================================
 echo "++ INFO: (2) Behzadi CompCorr Pre-processing + RapidTide Voxel-wise Regressor"
