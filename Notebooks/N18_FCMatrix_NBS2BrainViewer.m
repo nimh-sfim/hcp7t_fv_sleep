@@ -23,17 +23,3 @@ for scenario = scenarios
         end
     end
 end
-
-%%        
-%    result_AgtD = load("/data/SFIMJGC_HCP7T/Sleep/Resources/NBS_Results/NBS_ET_"+scenario+"_AgtD.mat");
-%    result_DgtA = load("/data/SFIMJGC_HCP7T/Sleep/Resources/NBS_Results/NBS_ET_"+scenario+"_DgtA.mat");
-%    result_AgtD = full(cell2mat(result_AgtD.nbs.NBS.con_mat));
-%    result_DgtA = full(cell2mat(result_DgtA.nbs.NBS.con_mat));
-%    result_AgtD = result_AgtD + result_AgtD.';
-%    result_DgtA = result_DgtA + result_DgtA.';
-%    writematrix(result_AgtD, ...
-%                "/data/SFIMJGC_HCP7T/Sleep/Resources/NBS_Results_T4/NBS_ET_"+scenario+"_AgtD.txt", ...
-%                "Delimiter"," ");
-%    writematrix(result_DgtA, ...
-%                "/data/SFIMJGC_HCP7T/Sleep/Resources/NBS_Results_T4/NBS_ET_"+scenario+"_DgtA.txt", ...
-%                "Delimiter"," ");
