@@ -134,11 +134,11 @@ peridiogram_SCAN_df.head(2)
 
 # > Segment-level results
 
-peridiogram_EC_df = pd.read_pickle(osp.join(Resources_Dir,'ET_Peridiograms_perSegments_EC.pkl'))
+peridiogram_EC_df = pd.read_pickle(osp.join(Resources_Dir,'ET_Peridiograms_perSegments_EC.V4lt_grp.pkl'))
 print('++ INFO: peridiogram_EC_df has shape %s' % str(peridiogram_EC_df.shape))
 peridiogram_EC_df.head(2)
 
-peridiogram_EO_df = pd.read_pickle(osp.join(Resources_Dir,'ET_Peridiograms_perSegments_EO.pkl'))
+peridiogram_EO_df = pd.read_pickle(osp.join(Resources_Dir,'ET_Peridiograms_perSegments_EO.V4lt_grp.pkl'))
 print('++ INFO: peridiogram_EO_df has shape %s' % str(peridiogram_EO_df.shape))
 peridiogram_EO_df.head(2)
 
