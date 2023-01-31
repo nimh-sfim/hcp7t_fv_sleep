@@ -23,7 +23,7 @@ import numpy as np
 import os.path as osp
 import os
 from utils.basics import get_available_runs
-from utils.basics import DATA_DIR
+from utils.basics import DATA_DIR, Resources_Dir
 
 import subprocess
 from nilearn.masking import apply_mask
