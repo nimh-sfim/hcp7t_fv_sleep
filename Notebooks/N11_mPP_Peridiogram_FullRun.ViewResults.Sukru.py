@@ -40,7 +40,49 @@ from scipy.stats import kruskal, wilcoxon, ttest_ind
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+
+
 # -
+
+def get_available_runs(when='post_download', type='all'):
+    """
+    This function returns a list with all run names available at different times during the 
+    analyses according to the when parameter.
+    
+    Inputs
+    ------
+    when: str with three possible values: post_download, post_qa1, final
+    type: str with three possible values: all, drowsy, awake. This only applies if when = final
+    
+    Outputs
+    -------
+    out_list: list of strings with run names.
+    """
+    out_list = []
+    # List of runs for which fMRI data was acquired
+    if when == 'post_download':
+        data = pd.read_pickle(ProjectFiles_DF_Path)
+    # List of runs for which ET exists
+    if when == 'post_qa1':
+        data = pd.read_pickle(QA1_Results_DF_Path)
+        data = data[(data['ET_OK']==True) & (data['ET Avail']==True) & (data['Spatial Resolution OK']==True) & (data['TR OK']==True) & (data['Nacq OK']==True)]
+        for index,row in data.iterrows():
+            sbj = str(row['Sbj'])
+            run = str(row['Run'])
+            out_list.append('_'.join([sbj,run]))
+    if when == 'final':
+        path_awake  = osp.join(Resources_Dir,'Run_List_Awake.Sukru.txt')
+        path_drowsy = osp.join(Resources_Dir,'Run_List_Drowsy.Sukru.txt')
+        awake_list  = list(np.loadtxt(path_awake,dtype=str))
+        drowsy_list = list(np.loadtxt(path_drowsy,dtype=str))
+        if type == 'all':
+            out_list    = awake_list + drowsy_list
+        elif type == 'awake':
+            out_list = awake_list
+        elif type == 'drowsy':
+            out_list = drowsy_list
+    return out_list
+
 
 # # Use the Group Level V4 ROI for these analyses
 
@@ -67,7 +109,7 @@ print('++ INFO: Number of Drowsy Runs = %d' % len(Drowsy_Runs))
 # %%time
 if remove_HRa_scans:
     scan_selection  = 'noHRa'
-    scan_HR_info    = pd.read_csv(osp.join(Resources_Dir,'HR_scaninfo.csv'), index_col=0)
+    scan_HR_info    = pd.read_csv(osp.join(Resources_Dir,'HR_scaninfo.Sukru.csv'), index_col=0)
     scan_HR_info    = scan_HR_info[(scan_HR_info['HR_aliased']< 0.03) | (scan_HR_info['HR_aliased']> 0.07)]
     Manuscript_Runs = list(scan_HR_info.index)
     Awake_Runs      = list(scan_HR_info[scan_HR_info['Scan Type']=='Awake'].index)
@@ -99,12 +141,6 @@ print(peridiograms_df.shape)
 
 import hvplot.pandas
 peridiograms_df['283543_rfMRI_REST1_PA'].hvplot(title='',c='#4472C4', line_width=3, fontsize={'labels':15,'ticks':15}, ylabel='PSD (a.u./Hz)', xticks=[(x,'%.2f' % x) for x in np.linspace(0,0.5,11)], grid=True).opts(toolbar=None)
-
-
-
-
-
-
 
 # ### Prepare the data so that we can plot it with Seaborn (get confidence intervals)
 
@@ -220,6 +256,6 @@ axs[1].set(xscale="log")
 
 fig
 
-fig.savefig('./figures/Revision1_Figure9_PanelA.{ss}.png'.format(ss=scan_selection))
+fig.savefig('./figures/Revision1_Figure9_PanelA.{ss}.Sukru.png'.format(ss=scan_selection))
 
 
