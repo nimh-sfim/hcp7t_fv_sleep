@@ -49,6 +49,82 @@ print('pandas: %s' % str(pd.__version__))
 print('sklearn: %s' % str(sklearn.__version__))
 print('seaborn: %s' % str(sns.__version__))
 # %matplotlib inline
+
+# +
+def get_available_runs(when='post_download', type='all'):
+    """
+    This function returns a list with all run names available at different times during the 
+    analyses according to the when parameter.
+    
+    Inputs
+    ------
+    when: str with three possible values: post_download, post_qa1, final
+    type: str with three possible values: all, drowsy, awake. This only applies if when = final
+    
+    Outputs
+    -------
+    out_list: list of strings with run names.
+    """
+    out_list = []
+    # List of runs for which fMRI data was acquired
+    if when == 'post_download':
+        data = pd.read_pickle(ProjectFiles_DF_Path)
+    # List of runs for which ET exists
+    if when == 'post_qa1':
+        data = pd.read_pickle(QA1_Results_DF_Path)
+        data = data[(data['ET_OK']==True) & (data['ET Avail']==True) & (data['Spatial Resolution OK']==True) & (data['TR OK']==True) & (data['Nacq OK']==True)]
+        for index,row in data.iterrows():
+            sbj = str(row['Sbj'])
+            run = str(row['Run'])
+            out_list.append('_'.join([sbj,run]))
+    if when == 'final':
+        path_awake  = osp.join(Resources_Dir,'Run_List_Awake.Sukru.txt')
+        path_drowsy = osp.join(Resources_Dir,'Run_List_Drowsy.Sukru.txt')
+        awake_list  = list(np.loadtxt(path_awake,dtype=str))
+        drowsy_list = list(np.loadtxt(path_drowsy,dtype=str))
+        if type == 'all':
+            out_list    = awake_list + drowsy_list
+        elif type == 'awake':
+            out_list = awake_list
+        elif type == 'drowsy':
+            out_list = drowsy_list
+    return out_list
+
+def load_segments(kind,runs=None,min_dur=None):
+    """
+    Load information about scan segments according to ET data
+    
+    INPUTS
+    runs: list of scans ID to include
+    kind: type of target segments (EC=eyes closed, EO=eyes open)
+    min_dur: remove any segment with duration less than this threshold (in seconds)
+    
+    OUTPUTS
+    df: dataframe with one row per segment of interest. For each segment it will include the runID,
+        segment type, segment index, segment UUID, segment onset (secodns), segment offset (seconds), 
+        segment duration (seconds) and scan label.
+    """
+    if kind == 'all':
+       path_EC = osp.join(Resources_Dir,'EC_Segments_Info.Sukru.pkl')
+       path_EO = osp.join(Resources_Dir,'EO_Segments_Info.Sukru.pkl')
+       df_EC   = pd.read_pickle(path_EC)
+       df_EO   = pd.read_pickle(path_EO)
+       df      = pd.concat([df_EO, df_EC], axis=0).reset_index(drop=True)
+    else:
+       path = osp.join(Resources_Dir,'{k}_Segments_Info.Sukru.pkl'.format(k=kind))
+       df   = pd.read_pickle(path)
+    
+    if min_dur is not None:
+        df=df[df['Duration']>min_dur] # JAVIER: may want to change to >=min_dur lateer #
+      
+    if runs is not None:
+       df=df[df['Run'].isin(runs)]
+    
+    print('++ INFO: segment_df has shape: %s' % str(df.shape))
+    
+    return df
+
+
 # -
 
 # ## Configuration Variables
@@ -67,7 +143,7 @@ print('++ INFO: Number of Runs [All = %d, Awake = %d, Drowsy = %d]' % (len(Manus
 
 # ## Load Pre-processed ET Data and Downsample it to 1Hz (to match fMRI data)
 
-ET_PupilSize_Proc_1Hz = pd.read_pickle(osp.join(Resources_Dir,'ET_PupilSize_Proc_1Hz_corrected.pkl'))
+ET_PupilSize_Proc_1Hz = pd.read_pickle(osp.join(Resources_Dir,'ET_PupilSize_Proc_1Hz_corrected.Sukru.pkl'))
 
 [Nacq, Nruns ]              =  ET_PupilSize_Proc_1Hz.shape
 print('++ Number of acquisitions = %d' % Nacq)
