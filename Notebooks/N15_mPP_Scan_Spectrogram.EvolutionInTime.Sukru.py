@@ -41,6 +41,82 @@ import panel as pn
 from scipy.stats import ttest_ind
 
 # %matplotlib inline
+
+# +
+def get_available_runs(when='post_download', type='all'):
+    """
+    This function returns a list with all run names available at different times during the 
+    analyses according to the when parameter.
+    
+    Inputs
+    ------
+    when: str with three possible values: post_download, post_qa1, final
+    type: str with three possible values: all, drowsy, awake. This only applies if when = final
+    
+    Outputs
+    -------
+    out_list: list of strings with run names.
+    """
+    out_list = []
+    # List of runs for which fMRI data was acquired
+    if when == 'post_download':
+        data = pd.read_pickle(ProjectFiles_DF_Path)
+    # List of runs for which ET exists
+    if when == 'post_qa1':
+        data = pd.read_pickle(QA1_Results_DF_Path)
+        data = data[(data['ET_OK']==True) & (data['ET Avail']==True) & (data['Spatial Resolution OK']==True) & (data['TR OK']==True) & (data['Nacq OK']==True)]
+        for index,row in data.iterrows():
+            sbj = str(row['Sbj'])
+            run = str(row['Run'])
+            out_list.append('_'.join([sbj,run]))
+    if when == 'final':
+        path_awake  = osp.join(Resources_Dir,'Run_List_Awake.Sukru.txt')
+        path_drowsy = osp.join(Resources_Dir,'Run_List_Drowsy.Sukru.txt')
+        awake_list  = list(np.loadtxt(path_awake,dtype=str))
+        drowsy_list = list(np.loadtxt(path_drowsy,dtype=str))
+        if type == 'all':
+            out_list    = awake_list + drowsy_list
+        elif type == 'awake':
+            out_list = awake_list
+        elif type == 'drowsy':
+            out_list = drowsy_list
+    return out_list
+
+def load_segments(kind,runs=None,min_dur=None):
+    """
+    Load information about scan segments according to ET data
+    
+    INPUTS
+    runs: list of scans ID to include
+    kind: type of target segments (EC=eyes closed, EO=eyes open)
+    min_dur: remove any segment with duration less than this threshold (in seconds)
+    
+    OUTPUTS
+    df: dataframe with one row per segment of interest. For each segment it will include the runID,
+        segment type, segment index, segment UUID, segment onset (secodns), segment offset (seconds), 
+        segment duration (seconds) and scan label.
+    """
+    if kind == 'all':
+       path_EC = osp.join(Resources_Dir,'EC_Segments_Info.Sukru.pkl')
+       path_EO = osp.join(Resources_Dir,'EO_Segments_Info.Sukru.pkl')
+       df_EC   = pd.read_pickle(path_EC)
+       df_EO   = pd.read_pickle(path_EO)
+       df      = pd.concat([df_EO, df_EC], axis=0).reset_index(drop=True)
+    else:
+       path = osp.join(Resources_Dir,'{k}_Segments_Info.Sukru.pkl'.format(k=kind))
+       df   = pd.read_pickle(path)
+    
+    if min_dur is not None:
+        df=df[df['Duration']>min_dur] # JAVIER: may want to change to >=min_dur lateer #
+      
+    if runs is not None:
+       df=df[df['Run'].isin(runs)]
+    
+    print('++ INFO: segment_df has shape: %s' % str(df.shape))
+    
+    return df
+
+
 # -
 
 sns.set(font_scale=1.5)
@@ -84,7 +160,7 @@ print(windowed_time_index[0:10])
 # %%time
 if remove_HRa_scans:
     scenario        = 'noHRa'
-    scan_HR_info    = pd.read_csv(osp.join(Resources_Dir,'HR_scaninfo.csv'), index_col=0)
+    scan_HR_info    = pd.read_csv(osp.join(Resources_Dir,'HR_scaninfo.Sukru.csv'), index_col=0)
     scan_HR_info    = scan_HR_info[(scan_HR_info['HR_aliased']< 0.03) | (scan_HR_info['HR_aliased']> 0.07)]
     Manuscript_Runs = list(scan_HR_info.index)
     Awake_Runs      = list(scan_HR_info[scan_HR_info['Scan Type']=='Awake'].index)
@@ -177,4 +253,4 @@ ax[1].legend(ncol=2)
 #
 # > **<u>FINDING:</u>**: As scanning progresses, we see a differentiation in terms of cumulative PSD between subjects who kept their eyes open continously and those who did not. The second group tends to have a higher cumulative PSD at longer scanning times. By looking at cumulative PSD we overcome the limitation mentioned above, and the differentiation across groups becomes more evident
 
-fig.savefig('./figures/Revision1_Figure07.{region}.{scenario}.png'.format(region=region,scenario=scenario))
+fig.savefig('./figures/Revision1_Figure07.{region}.{scenario}.Sukru.png'.format(region=region,scenario=scenario))
