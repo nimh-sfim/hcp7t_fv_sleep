@@ -229,7 +229,7 @@ figure10.save('./figures/Revision1_Figure15.{region}.{scenario}.png'.format(regi
 text="![](./figures/Revision1_Figure15.{region}.{scenario}.png)".format(region=region, scenario=scenario)
 md("%s"%text)
 
-# ## Save the list of scans on the top and bottom 100 for both GS and PSD, so we can use those later on N13 to look for network differences
+# ## Save the list of scans on the top and bottom 100 for both GS and PSD, so we can use those later to look for network differences
 
 # +
 GS_Top100_Runs  = scans_rank[(scans_rank['GSamplitude Rank']<=100)].index.to_list()
